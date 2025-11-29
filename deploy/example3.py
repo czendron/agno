@@ -2,7 +2,7 @@
 import requests
 import json
 from pprint import pprint
-import streamlit as st
+
 
 AGENT_ID = "pdf_agent"
 ENDPOINT = f"http://localhost:7777/agents/{AGENT_ID}/runs"
@@ -34,9 +34,7 @@ def get_response_stream(message: str):
 
 # STREAMLIT ====================================
 
-st.set_page_config(page_title="Agent Chat PDF")
 
-st.title("Agent Chat PDF")
 
 
 # PRINT ANSWER =================================
