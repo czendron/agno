@@ -52,13 +52,21 @@ def _job_to_df(pieces) -> pd.DataFrame:
     ], columns=PIECE_COLUMNS)
 
 
+def _bump_pieces_data(df: pd.DataFrame) -> None:
+    # st.data_editor owns its value once instantiated - it refuses a direct
+    # st.session_state[key] overwrite after that (StreamlitValueAssignmentNotAllowedError).
+    # Changing the widget's key forces a fresh instance instead, which does accept a new value.
+    st.session_state["pieces_data"] = df
+    st.session_state["pieces_version"] = st.session_state.get("pieces_version", 0) + 1
+
+
 def _load_example():
     choice = st.session_state["example_choice"]
     if choice == "-":
         return
     st.session_state["job_id"] = choice
     st.session_state["client"] = EXAMPLE_CLIENTS.get(choice, "")
-    st.session_state["pieces_editor"] = _job_to_df(JOBS[choice])
+    _bump_pieces_data(_job_to_df(JOBS[choice]))
 
 
 def _analyze_job_card():
@@ -77,13 +85,13 @@ def _analyze_job_card():
         with st.spinner("Reading job card..."):
             extracted = read_job_card(uploaded.read(), api_key)
         st.session_state["job_id"] = extracted.job_id
-        st.session_state["pieces_editor"] = pd.DataFrame([
+        _bump_pieces_data(pd.DataFrame([
             {"id": p.id, "depth_mm": p.depth_mm, "length_mm": p.length_mm,
              "orientation": p.orientation, "tapered": p.tapered,
              "angle_deg": p.angle_deg, "returns": p.returns,
              "uncertain": p.uncertain or ""}
             for p in extracted.pieces
-        ], columns=PIECE_COLUMNS)
+        ], columns=PIECE_COLUMNS))
         st.session_state["ai_error"] = None
     except Exception as e:  # noqa: BLE001 - surface any failure in the UI, this is a best-effort draft step
         st.session_state["ai_error"] = f"Couldn't read that job card: {e}"
@@ -125,12 +133,13 @@ with left:
         "goes solo and gets flagged, instead of being silently grouped."
     )
 
-    if "pieces_editor" not in st.session_state:
-        st.session_state["pieces_editor"] = pd.DataFrame([EMPTY_ROW], columns=PIECE_COLUMNS)
+    if "pieces_data" not in st.session_state:
+        st.session_state["pieces_data"] = pd.DataFrame([EMPTY_ROW], columns=PIECE_COLUMNS)
+        st.session_state["pieces_version"] = 0
 
     pieces_df = st.data_editor(
-        st.session_state["pieces_editor"],
-        key="pieces_editor",
+        st.session_state["pieces_data"],
+        key=f"pieces_editor_{st.session_state['pieces_version']}",
         num_rows="dynamic",
         use_container_width=True,
         column_config={
@@ -182,7 +191,7 @@ with left:
             "Hoods": box.label,
             "Depth (mm)": box.depth_mm,
             "Length H1": box.length_h1,
-            "Length H2": box.length_h2 or "",
+            "Length H2": box.length_h2 or None,  # None, not "" - keeps the column numeric (mixed float/str breaks Arrow serialization)
             "Returns": box.returns,
             "Base (mm)": box.base_length_mm,
             "Lid (mm)": box.lid_length_mm,
