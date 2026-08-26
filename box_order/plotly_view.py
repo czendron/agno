@@ -9,9 +9,8 @@ from typing import List
 
 import plotly.graph_objects as go
 
-from box_order.palletizing import PALLET_SIZE_MM, PalletRow
+from box_order.palletizing import PALLET_SIZE_MM, PALLET_THICKNESS_MM, PalletRow
 
-PALLET_THICKNESS_MM = 150
 ROW_GAP_MM = 300
 
 # Muted, architectural palette (concrete/steel/stone tones) to match the

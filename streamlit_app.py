@@ -16,7 +16,7 @@ import streamlit as st
 
 from box_order.box_grouping import Piece, group_into_boxes
 from box_order.known_jobs import JOBS
-from box_order.palletizing import pack_pallets, total_pallets
+from box_order.palletizing import pack_pallets, total_boxes, total_hoods, total_pallets, total_weight_kg
 from box_order.plotly_view import pallet_load_figure
 from box_order.write_to_template import write_job
 
@@ -298,9 +298,32 @@ with left:
 with right:
     st.subheader("Pallet load")
     rows_ = pack_pallets(boxes)
-    st.caption(f"{total_pallets(rows_)} pallets (1200mm squares, joined end to end for long boxes)")
+
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("Pallets", total_pallets(rows_))
+    m2.metric("Boxes", total_boxes(rows_))
+    m3.metric("Hoods", total_hoods(rows_))
+    m4.metric("Est. weight", f"{total_weight_kg(rows_):.0f} kg")
+
     st.plotly_chart(pallet_load_figure(rows_), use_container_width=True)
+
+    st.caption("Per pallet row (a row = however many 1200mm pallets are joined end to end for that row's longest box):")
+    st.dataframe(pd.DataFrame([
+        {
+            "Row": i,
+            "Pallets": r.pallet_count,
+            "Boxes": r.box_count,
+            "Hoods": r.hood_count,
+            "L (mm)": r.row_length_mm,
+            "W (mm)": r.row_width_mm,
+            "H (mm)": r.row_height_mm,
+            "Weight (kg)": r.weight_kg,
+        }
+        for i, r in enumerate(rows_, start=1)
+    ]), use_container_width=True, hide_index=True)
+
     st.caption(
         "Box size = that box's hood depth + 200mm (width/depth), 600mm height. "
-        "Max 2 boxes stacked per footprint. Placeholder numbers - tell me and I'll change them."
+        "Max 2 boxes stacked per footprint. Weight is a flat 15kg/box placeholder "
+        "until a real formula replaces it. All placeholder numbers - tell me and I'll change them."
     )

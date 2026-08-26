@@ -16,6 +16,14 @@ separate rows, sorted longest-first, and stacked up to MAX_STACK_HIGH
 per footprint before starting a new row. This is a greedy heuristic, not
 an optimal packer - good enough to see the shape of a load, not a promise
 of the fewest possible pallets.
+
+Weight (2026-08-26): BOX_WEIGHT_KG is a flat 15kg/box placeholder, not a
+real calculation - Caio's explicit instruction was to stub this until an
+actual weight formula exists (likely from hood depth/length/gauge, the
+same inputs CALCULATIONS!D:F in the real template already uses for its
+own weight estimate - see box_order/README.md). Swap BOX_WEIGHT_KG for a
+per-box function once that's worked out; everything downstream (row and
+job totals) just sums whatever this returns.
 """
 
 from dataclasses import dataclass, field
@@ -24,9 +32,11 @@ from typing import List
 from box_order.box_grouping import Box
 
 PALLET_SIZE_MM = 1200
+PALLET_THICKNESS_MM = 150  # pallet itself (the timber/plastic base), not a box - matches plotly_view's render
 BOX_XY_CLEARANCE_MM = 200
 BOX_HEIGHT_MM = 600
 MAX_STACK_HIGH = 2  # boxes stacked per footprint - placeholder, no real limit known yet
+BOX_WEIGHT_KG = 15  # flat placeholder per box until real weight calc exists (2026-08-26)
 
 
 @dataclass
@@ -63,6 +73,25 @@ class PalletRow:
     def row_width_mm(self) -> float:
         return PALLET_SIZE_MM
 
+    @property
+    def row_height_mm(self) -> float:
+        if not self.boxes:
+            return PALLET_THICKNESS_MM
+        stacked_height = max(p.z_mm + p.height_mm for p in self.boxes)
+        return PALLET_THICKNESS_MM + stacked_height
+
+    @property
+    def box_count(self) -> int:
+        return len(self.boxes)
+
+    @property
+    def hood_count(self) -> int:
+        return sum(len(p.box.pieces) for p in self.boxes)
+
+    @property
+    def weight_kg(self) -> float:
+        return self.box_count * BOX_WEIGHT_KG
+
 
 def pack_pallets(boxes: List[Box]) -> List[PalletRow]:
     rows: List[PalletRow] = []
@@ -90,3 +119,15 @@ def pack_pallets(boxes: List[Box]) -> List[PalletRow]:
 
 def total_pallets(rows: List[PalletRow]) -> int:
     return sum(r.pallet_count for r in rows)
+
+
+def total_boxes(rows: List[PalletRow]) -> int:
+    return sum(r.box_count for r in rows)
+
+
+def total_hoods(rows: List[PalletRow]) -> int:
+    return sum(r.hood_count for r in rows)
+
+
+def total_weight_kg(rows: List[PalletRow]) -> float:
+    return sum(r.weight_kg for r in rows)
