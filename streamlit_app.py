@@ -6,8 +6,10 @@ and packed onto pallets live, and download the filled-in Dispatch Works
 Order. See box_order/README.md for the rules this applies.
 """
 
+import base64
 import io
 import os
+from pathlib import Path
 
 import pandas as pd
 import streamlit as st
@@ -33,6 +35,58 @@ EXAMPLE_CLIENTS = {
 
 EMPTY_ROW = {"id": "", "depth_mm": 450, "length_mm": 1200, "orientation": "regular",
              "tapered": False, "angle_deg": 0, "returns": 0, "uncertain": ""}
+
+LOGO_PATH = Path(__file__).parent / "assets" / "heka-hoods-logo.png"
+BRAND_GRAY = "#838287"
+
+BRAND_CSS = f"""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+html, body, .stApp {{
+    font-family: 'Poppins', sans-serif;
+}}
+
+h1, h2, h3 {{
+    font-family: 'Poppins', sans-serif;
+    letter-spacing: 0.03em;
+    font-weight: 600;
+}}
+
+.hh-header {{
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 4px;
+}}
+.hh-header img {{ height: 64px; }}
+.hh-header .hh-title {{
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 1.9rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #000000;
+}}
+.hh-subtitle {{
+    color: {BRAND_GRAY};
+    font-size: 0.95rem;
+    letter-spacing: 0.01em;
+    margin-bottom: 1.6rem;
+}}
+
+.stButton > button[kind="primary"] {{
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-weight: 500;
+    border-radius: 2px;
+}}
+section[data-testid="stSidebar"] {{
+    border-right: 1px solid #E4E4E5;
+}}
+hr {{ border-color: #E4E4E5 !important; }}
+</style>
+"""
 
 
 def _get_api_key() -> str:
@@ -97,8 +151,19 @@ def _analyze_job_card():
         st.session_state["ai_error"] = f"Couldn't read that job card: {e}"
 
 
-st.title("Heka Hoods - Box Order")
-st.caption("Group a job's hoods into boxes, pack them onto pallets, and generate the Dispatch Works Order.")
+st.markdown(BRAND_CSS, unsafe_allow_html=True)
+
+_logo_b64 = base64.b64encode(LOGO_PATH.read_bytes()).decode("utf-8")
+st.markdown(
+    f"""
+    <div class="hh-header">
+        <img src="data:image/png;base64,{_logo_b64}" alt="Heka Hoods">
+        <span class="hh-title">Box Order</span>
+    </div>
+    <div class="hh-subtitle">Group a job's hoods into boxes, pack them onto pallets, and generate the Dispatch Works Order.</div>
+    """,
+    unsafe_allow_html=True,
+)
 
 with st.sidebar:
     st.header("Job card")

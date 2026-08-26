@@ -14,7 +14,9 @@ from box_order.palletizing import PALLET_SIZE_MM, PalletRow
 PALLET_THICKNESS_MM = 150
 ROW_GAP_MM = 300
 
-BOX_COLORS = ["#4C78A8", "#F58518", "#54A24B", "#E45756", "#72B7B2", "#B279A2", "#FF9DA6", "#9D755D"]
+# Muted, architectural palette (concrete/steel/stone tones) to match the
+# Heka Hoods brand identity (black/grey/white) instead of a bright default set.
+BOX_COLORS = ["#2B2B2E", "#838287", "#B8B4AC", "#6E6A5E", "#4A4A4D", "#A89F91"]
 
 
 def _cuboid_trace(x0, y0, z0, dx, dy, dz, color, name, opacity=1.0):
