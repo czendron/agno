@@ -29,13 +29,62 @@ in places — see "Rules" below for where they disagree.
   layout" below).
 - `box_order/plotly_view.py` — renders a pallet layout as a 3D Plotly figure.
 - `box_order/ai_reader.py` — calls Claude to read a job card PDF and draft
-  a piece list. Untested against a live job card (no API key existed while
-  building this) — verify against a real one once a key is configured.
-- `streamlit_app.py` — the web app tying it together: upload a job card
-  (or paste pieces by hand), see box groupings and a 3D pallet view live,
-  download the finished DWO. Deploy via share.streamlit.io pointed at this
-  repo, main file `streamlit_app.py`; needs `ANTHROPIC_API_KEY` in the
-  app's secrets for the AI-read feature (everything else works without it).
+  a piece list. Verified against two real job cards on 2026-08-26 — see
+  the module docstring.
+- `box_order/api.py` — FastAPI wrapper exposing the engine above as a REST
+  API (`/api/group`, `/api/pallets`, `/api/generate-dwo`, `/api/labels`,
+  `/api/analyze-job-card`, `/api/jobs`). Exists so the Next.js app can call
+  the exact same tested Python logic instead of a second reimplementation
+  in JS — every endpoint is a thin adapter, no business logic lives here.
+- `streamlit_app.py` — one of two parallel front ends (see "Two front
+  ends" below): upload a job card (or paste pieces by hand), see box
+  groupings and a 3D pallet view live, download the finished DWO. Deploy
+  via share.streamlit.io pointed at this repo, main file `streamlit_app.py`;
+  needs `ANTHROPIC_API_KEY` in the app's secrets for the AI-read feature
+  (everything else works without it).
+- `web/` — the other front end: the same app rebuilt in Next.js
+  (TypeScript, Tailwind, React), calling `box_order/api.py` instead of
+  running Python directly. See "Two front ends" below.
+
+## Two front ends
+
+Same engine, same rules, same real data — two different UIs, built to
+compare side by side rather than one replacing the other:
+
+|                | Streamlit                          | Next.js                                  |
+|----------------|-------------------------------------|-------------------------------------------|
+| Where          | `streamlit_app.py`                  | `web/` (calls `box_order/api.py`)         |
+| Runs on        | Python only                         | Python (API) + Node (UI)                  |
+| Deploy target  | share.streamlit.io                  | Vercel (frontend) — API hosting TBD, see below |
+| Business logic | Imports `box_order/` directly       | Same `box_order/` code, via HTTP          |
+
+Both read and write the exact same job data, box-grouping engine, pallet
+heuristic, DWO template, and label HTML — there is exactly one
+implementation of the actual business rules (`box_order/*.py`); neither
+front end re-derives box sizes or pallet counts on its own.
+
+Run both locally, side by side:
+
+```
+# Terminal 1 - API (also powers the Next.js app)
+uvicorn box_order.api:app --reload --port 8000
+
+# Terminal 2 - Streamlit (talks to box_order/ directly, no API needed)
+streamlit run streamlit_app.py
+
+# Terminal 3 - Next.js (talks to the API on :8000)
+cd web && npm install && npm run dev
+```
+
+Streamlit: http://localhost:8501 · Next.js: http://localhost:3000
+
+**Deployment status:** neither is live yet. Streamlit's target
+(share.streamlit.io) is the same one-click flow used for other internal
+tools here; Next.js's natural target is Vercel for the frontend, same as
+other projects, but pairing it with the FastAPI backend needs a real
+hosting decision (Vercel's own Python functions, or a small separate host
+for `box_order/api.py`) that hasn't been checked against Vercel's current
+setup yet — don't assume either way until that's actually verified.
 
 ## Pallet layout
 
@@ -60,9 +109,9 @@ the right stacking limit — both are placeholders pending real numbers.
 
 ## Input methods
 
-- **Web app** (`streamlit_app.py`): paste pieces into the table, or upload
-  a job card PDF and have Claude draft the table (reviewed before anything
-  computes).
+- **Web app** (`streamlit_app.py` or `web/` — see "Two front ends"): paste
+  pieces into the table, or upload a job card PDF and have Claude draft the
+  table (reviewed before anything computes).
 - **Direct Python**: hardcoded `Piece()` lists, as in `known_jobs.py`.
 
 No non-AI, non-Python input method exists (no CSV import, no manual Excel

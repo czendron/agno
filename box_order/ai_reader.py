@@ -5,9 +5,10 @@ the editable table for a human to check before anything gets computed,
 same "flag, don't guess" principle as the rest of the engine.
 
 Needs an Anthropic API key (ANTHROPIC_API_KEY env var, or Streamlit secrets
-key "ANTHROPIC_API_KEY") - untested against a live job card as of writing,
-since no key was available yet. Verify against a real job card once one
-exists.
+key "ANTHROPIC_API_KEY"). Verified against two real job cards (Architects
+Ink, Horizon) on 2026-08-26 with accurate results - still a draft shown for
+human review before anything computes, same as any other uncertain piece,
+not a reason to skip the review step.
 """
 
 import base64
