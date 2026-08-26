@@ -1,13 +1,12 @@
 """
-Piece dimensions for 7 real jobs, read off the Final Drawings / job card
+Piece dimensions for 8 real jobs, read off the Final Drawings / job card
 PDFs.
 
 Confidence varies by job - see verify_known_jobs.py, which checks the
 confirmed jobs strictly and only prints (doesn't assert) the rest:
 
-  - XP0096, HH23173N, HH23341N, HH23104N, HH19634N: confirmed by Caio
-    against what dispatch actually did. Should match exactly (see the
-    known odd-pool caveat on HH23104N in box_grouping.py).
+  - XP0096, HH23173N, HH23341N, HH23104N, HH19634N, HH22246: confirmed by
+    Caio against what dispatch actually did. Should match exactly.
   - HH22496N (DLG), HH20143SA (Horizon): included, but partly flagged
     UNCERTAIN per the open questions in box_grouping.py. Review, don't
     trust blindly.
@@ -126,4 +125,19 @@ JOBS["HH19634N"] = [
     Piece("HH19634N", "4A", 300, 1690, returns=1),
     Piece("HH19634N", "4B", 300, 764, returns=0),
     Piece("HH19634N", "4C", 300, 1690, returns=1),
+]
+
+# --- HH22246 - Renovare (confirmed by Caio 2026-08-26) ---
+# 3 single-piece hoods, no joiners/returns/taper/angle at all - the
+# simplest job read so far. All three share depth 450mm, so all three are
+# pairing-eligible, which makes this an odd (3-piece) same-depth pool -
+# the exact case that pinned down the odd-pool tie-break rule in
+# box_grouping.py (rule 6): the longest piece (3) goes solo, the other two
+# (1, 2) pair. Box sizes come out the same as the OLD "leave the middle
+# piece solo" behavior either way - Caio's reasoning was purely about
+# balancing material weight per box, not box size.
+JOBS["HH22246"] = [
+    Piece("HH22246", "1", 450, 800),
+    Piece("HH22246", "2", 450, 1400),
+    Piece("HH22246", "3", 450, 1850),
 ]

@@ -22,6 +22,16 @@ from the Final Drawings folder), plus one rule change confirmed 2026-08-26:
   6. When more than one valid pairing exists, prefer whichever pairing keeps
      box lengths across the job as close to equal as possible (Caio confirmed
      this is a general goal, applied manually and inconsistently today).
+     [2026-08-26 UPDATE] For an odd-sized same-depth pool specifically, where
+     more than one pairing ties on box-length equality: leave the longest
+     piece solo (not the leftover middle piece from naive longest+shortest
+     pairing) and pair the rest longest-with-shortest. This never changes
+     which box sizes result (the longest piece always sets its box's size,
+     paired or not) - it only changes which piece carries that size alone
+     vs. picks up a partner, so it balances total material per box instead.
+     Confirmed by Caio on job HH22246 (Renovare, 3 same-depth solo-eligible
+     pieces) and it also resolves the HH23104N labelling discrepancy noted
+     below - both were the same underlying tie-break question.
 
 STILL UNCONFIRMED (carried over from 2026-08-12):
   - Whether this solo-forcing list is complete.
@@ -35,17 +45,19 @@ where it sits in the run; the plain in-line JN joints between straight
 horizontal segments don't count, since there's no angle there. See the
 per-piece breakdown in known_jobs.py.
 
-KNOWN LIMITATION (found 2026-08-26 while porting/verifying this file): when
-a same-depth pool has an odd number of pieces (3, 5, ...), the "pop longest
-+ pop shortest, repeat" pairing below always leaves the *middle* piece as
-the solo one. On HH23104N (Architects Ink) this produces "2B & 1" solo "2A",
-where Caio's confirmed answer was "2A & 1" solo "2B" - the opposite pairing.
-The box dimensions come out identical either way (2A=1548mm and 2B=1549mm
-both round up to 1550mm), so this has never caused a wrong-size box, but it
-can put the wrong literal hood ID on a box's paperwork. Rather than guess a
-tie-breaking rule from one example, odd-sized pools are left as-is and
-should be treated as a labelling detail worth a human glance, not a fact to
-trust blindly - see verify_known_jobs.py.
+RESOLVED 2026-08-26 (odd-pool tie-break): earlier versions of this file
+paired same-depth odd pools via naive repeated "pop longest + pop shortest",
+which always left the *middle* piece solo. On HH23104N (Architects Ink) this
+produced "2B & 1" solo "2A", where Caio's confirmed answer was "2A & 1" solo
+"2B" - the box dimensions came out identical either way (2A=1548mm and
+2B=1549mm both round up to 1550mm), so it never caused a wrong-size box, but
+it could put the wrong literal hood ID on a box's paperwork. Rather than
+guess a tie-breaking rule from that one example, it was left unfixed and
+flagged as a labelling detail worth a human glance. Caio then gave the
+actual rule on a second, unrelated odd-pool job (HH22246, Renovare): leave
+the *longest* piece solo, not the middle one - see rule 6 above. That rule
+also happens to exactly reproduce Caio's original HH23104N answer, so both
+jobs are now asserted normally in verify_known_jobs.py, no more workaround.
 
 Angle length-padding (5/10/15deg=+0, 30deg=+50mm, 45deg=+100mm) is applied
 by hand to the length before it's typed into the sheet, per Caio - so it's
@@ -170,12 +182,20 @@ def group_into_boxes(pieces: List[Piece]) -> List[Box]:
 
     for pool in pools.values():
         pool = sorted(pool, key=lambda p: p.length_mm, reverse=True)
+        solo = None
+        if len(pool) % 2 == 1:
+            # Odd pool: the longest piece goes alone rather than the
+            # leftover middle piece - see rule 6 note above. This never
+            # changes which box sizes come out (the longest piece always
+            # sets its box's size, paired or not), it just decides which
+            # piece carries that size alone vs. picks up a partner.
+            solo = pool.pop(0)
         while len(pool) > 1:
             longest = pool.pop(0)
             shortest = pool.pop(-1)
             boxes.append(Box(pieces=[longest, shortest]))
-        if pool:
-            boxes.append(Box(pieces=[pool[0]], reasons=["odd one out in its size/shape pool"]))
+        if solo is not None:
+            boxes.append(Box(pieces=[solo], reasons=["odd one out in its size/shape pool"]))
 
     return boxes
 

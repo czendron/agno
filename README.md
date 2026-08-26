@@ -17,10 +17,10 @@ in places — see "Rules" below for where they disagree.
 
 - `box_order/box_grouping.py` — the grouping engine (`Piece`, `Box`,
   `group_into_boxes`). Pure logic, no file I/O.
-- `box_order/known_jobs.py` — piece dimensions for 7 real jobs, read off the
+- `box_order/known_jobs.py` — piece dimensions for 8 real jobs, read off the
   Final Drawings / job card PDFs. Varying confidence — see file for which
   are confirmed.
-- `box_order/verify_known_jobs.py` — runs the engine against those 7 jobs
+- `box_order/verify_known_jobs.py` — runs the engine against those 8 jobs
   and checks results. Run with `python -m box_order.verify_known_jobs`.
 - `box_order/write_to_template.py` — fills a copy of the real DWO template
   with a job's boxes. Every formula (box length, sorted print view, label
@@ -175,15 +175,21 @@ the printed guide implying it should ("box cut length is auto calculated
 based on the depth and length entered") — only length and returns actually
 drive the formula.
 
-**Known limitation:** when a same-depth pool has an odd number of pairable
-pieces (3, 5, ...), the pairing algorithm always leaves the *middle* piece
-solo. On job HH23104N this produces "2B & 1" solo "2A", where Caio's
-confirmed answer was the opposite pairing ("2A & 1" solo "2B"). Box
-dimensions come out identical either way (1548mm and 1549mm both round up
-to 1550mm) — this has never caused a wrong-size box, only a possible wrong
-hood ID on a box's paperwork. Not fixed, since guessing a general
-tie-breaking rule from one example risks overfitting. See
-`box_grouping.py` and `verify_known_jobs.py`.
+**Resolved 2026-08-26 (odd-pool tie-break):** when a same-depth pool has an
+odd number of pairable pieces (3, 5, ...), the pairing algorithm used to
+always leave the *middle* piece solo. On job HH23104N this produced "2B &
+1" solo "2A", where Caio's confirmed answer was the opposite pairing ("2A
+& 1" solo "2B"). Box dimensions came out identical either way (1548mm and
+1549mm both round up to 1550mm), so this never caused a wrong-size box,
+only a possible wrong hood ID on a box's paperwork — and rather than guess
+a general tie-breaking rule from that one example, it was left unfixed.
+Caio then gave the actual rule on a second, unrelated job (HH22246,
+Renovare — 3 single-piece hoods, no returns/taper/angle at all, just an
+odd same-depth pool): leave the **longest** piece solo, not the leftover
+middle one — *"it wouldn't change the sizes, but at least we balance the
+weight."* That's now how `box_grouping.py` pairs odd pools, and it
+reproduces Caio's original HH23104N answer exactly, so both jobs are
+asserted normally in `verify_known_jobs.py` with no more workaround.
 
 **Still open / unconfirmed:**
 - Whether the solo-forcing list (rule 3) is complete.
@@ -226,7 +232,7 @@ Caio's box order exactly once this was applied - see
 ## Running it
 
 ```
-python -m box_order.verify_known_jobs   # engine sanity check against 7 real jobs
+python -m box_order.verify_known_jobs   # engine sanity check against 8 real jobs
 ```
 
 ```python
