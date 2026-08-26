@@ -8,6 +8,7 @@ Order. See box_order/README.md for the rules this applies.
 
 import base64
 import io
+import json
 import os
 from pathlib import Path
 
@@ -16,6 +17,7 @@ import streamlit as st
 
 from box_order.box_grouping import Piece, group_into_boxes
 from box_order.known_jobs import JOBS
+from box_order.labels import box_labels_html
 from box_order.palletizing import pack_pallets, total_boxes, total_hoods, total_pallets, total_weight_kg
 from box_order.plotly_view import pallet_load_figure
 from box_order.write_to_template import write_job
@@ -123,6 +125,22 @@ def _load_example():
     _bump_pieces_data(_job_to_df(JOBS[choice]))
 
 
+def _load_saved_job():
+    uploaded = st.session_state.get("saved_job_upload")
+    if uploaded is None:
+        return
+    try:
+        data = json.loads(uploaded.read())
+        st.session_state["job_id"] = data.get("job_id", "")
+        st.session_state["client"] = data.get("client", "")
+        st.session_state["h_sections"] = int(data.get("h_sections", 0) or 0)
+        st.session_state["joiners"] = int(data.get("joiners", 0) or 0)
+        _bump_pieces_data(pd.DataFrame(data.get("pieces", []), columns=PIECE_COLUMNS))
+        st.session_state["load_error"] = None
+    except (json.JSONDecodeError, KeyError, TypeError) as e:
+        st.session_state["load_error"] = f"Couldn't load that file: {e}"
+
+
 def _analyze_job_card():
     uploaded = st.session_state.get("job_card_upload")
     if uploaded is None:
@@ -187,6 +205,12 @@ with st.sidebar:
     st.divider()
     st.selectbox("Or load an example job", ["-"] + list(JOBS.keys()),
                  key="example_choice", on_change=_load_example)
+
+    st.divider()
+    st.file_uploader("Or load a saved job (.json)", type=["json"], key="saved_job_upload",
+                      on_change=_load_saved_job)
+    if st.session_state.get("load_error"):
+        st.error(st.session_state["load_error"])
 
 left, right = st.columns([3, 2])
 
@@ -294,6 +318,33 @@ with left:
                 st.success(f"Generated {out_path.name} - every formula in the template is untouched, only data cells were filled.")
             except ValueError as e:
                 st.error(str(e))
+
+    st.divider()
+    save_col, labels_col = st.columns(2)
+    with save_col:
+        job_json = json.dumps({
+            "job_id": st.session_state["job_id"],
+            "client": st.session_state["client"],
+            "h_sections": int(st.session_state["h_sections"]),
+            "joiners": int(st.session_state["joiners"]),
+            "pieces": rows,
+        }, indent=2)
+        st.download_button(
+            "Save this job",
+            data=job_json,
+            file_name=f"{st.session_state['job_id'] or 'job'} - saved.json",
+            mime="application/json",
+        )
+        st.caption("Downloads job details + pieces as a file - reload it later via 'Or load a saved job' in the sidebar.")
+    with labels_col:
+        labels_html = box_labels_html(st.session_state["job_id"] or "JOB", boxes)
+        st.download_button(
+            "Download printable box labels",
+            data=labels_html,
+            file_name=f"{st.session_state['job_id'] or 'job'} - box labels.html",
+            mime="text/html",
+        )
+        st.caption("One label per box, sized for the Dymo (101x54mm placeholder) - open the file and print once, instead of per-box copy/paste.")
 
 with right:
     st.subheader("Pallet load")
