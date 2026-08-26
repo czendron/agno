@@ -104,16 +104,21 @@ tie-breaking rule from one example risks overfitting. See
 
 **Resolved 2026-08-26:** job HH20143SA (Horizon)'s U-shaped hoods were
 flagged uncertain - whether their vertical legs counted as "returns".
-Checked against the real drawing: they're separate straight pieces joined
-by a hardware L-shaped joiner, not a welded corner fold, so none of the
-solo-forcing rules apply. Fixed in `known_jobs.py` (which also had a real
-bug - hoods 3 and 4 are 5-piece runs, not 3-piece; the D piece was
-missing). Box count for that job dropped from 16 to 13 as a result.
+Caio confirmed: yes, it is a return, just a small one - a 100mm tab at
+each angled corner (joined by hardware, an LJN, rather than welded).
+Each piece gets 1 return per LJN corner it touches (0, 1, or 2, depending
+on where it sits in the run - the plain in-line JN joints between straight
+horizontal segments don't count, since there's no angle there). Since any
+return forces solo (rule 3), this job is mostly solo boxes - 21, up from
+an earlier miscount of 16 (which was also missing the 5th piece on hoods
+3 and 4 - a separate bug this surfaced, now fixed in `known_jobs.py`).
+Confirmed, not flagged - 0 pieces need review on this job now.
 
-This is also the case for treating "read the job card, extract pieces" as
+This is also a good example for "read the job card, extract pieces" being
 a visual task rather than a text-parsing one (see "Open design questions"
-below) - this fix came from looking at the actual isometric drawing, not
-from any label that said "not a return."
+below) - both the missing-piece bug and the returns question came from
+reading the actual isometric drawing, not from any label that spelled it
+out in words.
 
 ## Running it
 

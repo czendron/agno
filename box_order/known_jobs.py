@@ -55,20 +55,26 @@ for n in range(1, 37):
 JOBS["HH22496N"] = _dlg_pieces
 
 # --- HH20143SA - Horizon Construction Services ---
-# Read directly off the real drawing (2026-08-26), resolving what was an
-# open question as of 2026-08-12. Two corrections from the earlier version:
+# Read directly off the real drawing. One correction from the earlier
+# version stands: hoods 3 and 4 actually have 5 pieces each (A/B/C/D/E),
+# not 3 - the page details table confirms it (4 Joiners + 4 H-Sections = 4
+# joints, which needs 5 pieces). The earlier version was missing the D
+# piece on both and had the remaining run as one piece instead of two.
 #
-# 1. The vertical "legs" on hoods 2-6 are NOT welded returns. The legend
-#    distinguishes JN (straight joiner) from LJN (commercial L-shaped
-#    joiner) - each leg is a separate straight piece of sheet, mechanically
-#    joined to the horizontal piece by an LJN, not a welded corner fold.
-#    They carry none of the solo-forcing properties (no returns, not
-#    tapered, not angled) - so they're ordinary pairable HH450 pieces, same
-#    as everything else at that depth. No more UNCERTAIN flag needed.
-# 2. Hoods 3 and 4 actually have 5 pieces each (A/B/C/D/E), not 3 - the
-#    page details table confirms it (4 Joiners + 4 H-Sections = 4 joints,
-#    which needs 5 pieces). The earlier version was missing the D piece on
-#    both and had the remaining run as one piece instead of two.
+# On the "are the legs returns" question (2026-08-26): yes - Caio confirmed
+# it is a return, just a small one (a 100mm tab at the angle, joined by
+# hardware - an LJN - rather than welded). +100mm (1 return) per LJN corner
+# a piece touches; the plain in-line JN joints between horizontal segments
+# don't add anything, since there's no angle there. Worked out per piece
+# from the joint topology in the drawing:
+#   - leg (A or the last letter): touches exactly 1 LJN -> returns=1
+#   - a horizontal piece next to a leg (e.g. B, or D on the 5-piece hoods):
+#     touches 1 LJN -> returns=1
+#   - a horizontal piece between two other horizontal pieces (only C on
+#     the 5-piece hoods 3/4 - both its neighbours are plain JN, no angle):
+#     touches 0 LJN -> returns=0
+#   - the single top piece on the 3-piece hoods (2B/5B/6B) touches an LJN
+#     on BOTH ends -> returns=2
 #
 # Hood 1 (taper, confirmed by Caio): 1A/1B/1C all solo (tapered shape).
 _horizon_pieces = [
@@ -82,14 +88,14 @@ _horizon_pieces = [
 # lines, not cross-checked against a second source the way the confirmed
 # jobs were - worth a quick glance if this job ever needs re-verifying.
 _horizon_runs = {
-    "2": [1198.5, 2147, 1198.5],
-    "3": [1198.5, 2583, 2584, 2584, 1198.5],
-    "4": [1198.5, 2573, 2574, 2574, 1198.5],
-    "5": [1198.5, 1787, 1198.5],
-    "6": [1198.5, 1787, 1198.5],
+    "2": [(1198.5, 1), (2147, 2), (1198.5, 1)],
+    "3": [(1198.5, 1), (2583, 1), (2584, 0), (2584, 1), (1198.5, 1)],
+    "4": [(1198.5, 1), (2573, 1), (2574, 0), (2574, 1), (1198.5, 1)],
+    "5": [(1198.5, 1), (1787, 2), (1198.5, 1)],
+    "6": [(1198.5, 1), (1787, 2), (1198.5, 1)],
 }
 _letters = "ABCDE"
-for hood, lengths in _horizon_runs.items():
-    for letter, length in zip(_letters, lengths):
-        _horizon_pieces.append(Piece("HH20143SA", f"{hood}{letter}", 450, length))
+for hood, segs in _horizon_runs.items():
+    for letter, (length, returns) in zip(_letters, segs):
+        _horizon_pieces.append(Piece("HH20143SA", f"{hood}{letter}", 450, length, returns=returns))
 JOBS["HH20143SA"] = _horizon_pieces

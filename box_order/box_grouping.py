@@ -27,10 +27,13 @@ STILL UNCONFIRMED (carried over from 2026-08-12):
   - Whether this solo-forcing list is complete.
   - Any box weight limit (none known yet).
 
-RESOLVED 2026-08-26: Horizon HH20143SA Hoods 2-6's vertical legs are NOT
-returns - checked against the real drawing. They're separate straight
-pieces joined by a hardware part (LJN), not a welded corner fold, so none
-of the solo-forcing rules apply to them. See known_jobs.py.
+RESOLVED 2026-08-26: Horizon HH20143SA Hoods 2-6's vertical legs ARE
+returns - confirmed by Caio - just small ones (a 100mm tab at each angled
+corner, joined by hardware rather than welded). Each piece gets 1 return
+per LJN (L-shaped/angled) corner it touches - 0, 1, or 2 depending on
+where it sits in the run; the plain in-line JN joints between straight
+horizontal segments don't count, since there's no angle there. See the
+per-piece breakdown in known_jobs.py.
 
 KNOWN LIMITATION (found 2026-08-26 while porting/verifying this file): when
 a same-depth pool has an odd number of pieces (3, 5, ...), the "pop longest
