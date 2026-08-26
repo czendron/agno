@@ -1,12 +1,13 @@
 """
-Piece dimensions for 6 real jobs, read off the Final Drawings PDFs.
+Piece dimensions for 7 real jobs, read off the Final Drawings / job card
+PDFs.
 
 Confidence varies by job - see verify_known_jobs.py, which checks the
 confirmed jobs strictly and only prints (doesn't assert) the rest:
 
-  - XP0096, HH23173N, HH23341N, HH23104N: confirmed by Caio against what
-    dispatch actually did. Should match exactly (see the known odd-pool
-    caveat on HH23104N in box_grouping.py).
+  - XP0096, HH23173N, HH23341N, HH23104N, HH19634N: confirmed by Caio
+    against what dispatch actually did. Should match exactly (see the
+    known odd-pool caveat on HH23104N in box_grouping.py).
   - HH22496N (DLG), HH20143SA (Horizon): included, but partly flagged
     UNCERTAIN per the open questions in box_grouping.py. Review, don't
     trust blindly.
@@ -99,3 +100,30 @@ for hood, segs in _horizon_runs.items():
     for letter, (length, returns) in zip(_letters, segs):
         _horizon_pieces.append(Piece("HH20143SA", f"{hood}{letter}", 450, length, returns=returns))
 JOBS["HH20143SA"] = _horizon_pieces
+
+# --- HH19634N - Westbury Constructions (confirmed by Caio 2026-08-26) ---
+# 4 hoods, each a 3-piece U-shape (2 vertical legs + 1 horizontal top,
+# joined by plain JN hardware at each corner) - same shape family as
+# Horizon's 3-piece hoods above, but a DIFFERENT returns pattern: here each
+# leg carries its own return (1, from a formed tab at its end) and the top
+# piece carries none, even though it touches a JN corner at both ends.
+# Don't generalize either job's rule onto the other - Horizon's LJN joints
+# give a 3-piece hood's top piece returns=2; this job's plain JN joints
+# give it returns=0. Different hardware, independently confirmed results.
+# Piece lengths read off the drawing's own dimension chains (e.g. hoods
+# 1/2: 100+3+814+3+100 = 1020 I/D; hoods 3/4: 100+3+764+3+100 = 970 I/D),
+# cross-checked against Caio's confirmed box order - exact match.
+JOBS["HH19634N"] = [
+    Piece("HH19634N", "1A", 450, 1820, returns=1),
+    Piece("HH19634N", "1B", 450, 814, returns=0),
+    Piece("HH19634N", "1C", 450, 1820, returns=1),
+    Piece("HH19634N", "2A", 450, 1820, returns=1),
+    Piece("HH19634N", "2B", 450, 814, returns=0),
+    Piece("HH19634N", "2C", 450, 1820, returns=1),
+    Piece("HH19634N", "3A", 300, 1690, returns=1),
+    Piece("HH19634N", "3B", 300, 764, returns=0),
+    Piece("HH19634N", "3C", 300, 1690, returns=1),
+    Piece("HH19634N", "4A", 300, 1690, returns=1),
+    Piece("HH19634N", "4B", 300, 764, returns=0),
+    Piece("HH19634N", "4C", 300, 1690, returns=1),
+]

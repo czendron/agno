@@ -17,9 +17,10 @@ in places — see "Rules" below for where they disagree.
 
 - `box_order/box_grouping.py` — the grouping engine (`Piece`, `Box`,
   `group_into_boxes`). Pure logic, no file I/O.
-- `box_order/known_jobs.py` — piece dimensions for 6 real jobs, read off the
-  Final Drawings PDFs. Varying confidence — see file for which are confirmed.
-- `box_order/verify_known_jobs.py` — runs the engine against those 6 jobs
+- `box_order/known_jobs.py` — piece dimensions for 7 real jobs, read off the
+  Final Drawings / job card PDFs. Varying confidence — see file for which
+  are confirmed.
+- `box_order/verify_known_jobs.py` — runs the engine against those 7 jobs
   and checks results. Run with `python -m box_order.verify_known_jobs`.
 - `box_order/write_to_template.py` — fills a copy of the real DWO template
   with a job's boxes. Every formula (box length, sorted print view, label
@@ -208,10 +209,24 @@ below) - both the missing-piece bug and the returns question came from
 reading the actual isometric drawing, not from any label that spelled it
 out in words.
 
+**Resolved 2026-08-26:** job HH19634N (Westbury Constructions) raised the
+same "does this corner count as a return" question as Horizon, on a
+different job card, and the answer came out *different* - a good sign the
+two are genuinely separate cases, not one rule mis-applied twice. Its
+hoods are the same 3-piece U-shape (2 legs + 1 top) as Horizon's simplest
+hoods, but joined by plain JN hardware instead of Horizon's LJN. Caio
+confirmed: here, each **leg** carries its own return (1, from a formed tab
+at its end) and the **top piece carries none**, even though it touches a
+JN corner at both ends - unlike Horizon, where a 3-piece hood's top piece
+gets returns=2. Don't apply one job's rule to the other; both are recorded
+as their own confirmed data point in `known_jobs.py`. All 10 boxes matched
+Caio's box order exactly once this was applied - see
+`verify_known_jobs.py`.
+
 ## Running it
 
 ```
-python -m box_order.verify_known_jobs   # engine sanity check against 6 real jobs
+python -m box_order.verify_known_jobs   # engine sanity check against 7 real jobs
 ```
 
 ```python
