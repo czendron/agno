@@ -98,11 +98,22 @@ tie-breaking rule from one example risks overfitting. See
 
 **Still open / unconfirmed:**
 - Whether the solo-forcing list (rule 3) is complete.
-- Job HH20143SA (Horizon): are the vertical legs of the U-shaped wraps
-  "returns"? Flagged in `known_jobs.py`, not guessed.
 - Any box weight limit (none known).
 - Whether the printed-policy/validated-rules disagreement above (commercial
   corners) is real or just an untested edge case.
+
+**Resolved 2026-08-26:** job HH20143SA (Horizon)'s U-shaped hoods were
+flagged uncertain - whether their vertical legs counted as "returns".
+Checked against the real drawing: they're separate straight pieces joined
+by a hardware L-shaped joiner, not a welded corner fold, so none of the
+solo-forcing rules apply. Fixed in `known_jobs.py` (which also had a real
+bug - hoods 3 and 4 are 5-piece runs, not 3-piece; the D piece was
+missing). Box count for that job dropped from 16 to 13 as a result.
+
+This is also the case for treating "read the job card, extract pieces" as
+a visual task rather than a text-parsing one (see "Open design questions"
+below) - this fix came from looking at the actual isometric drawing, not
+from any label that said "not a return."
 
 ## Running it
 

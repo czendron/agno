@@ -55,28 +55,41 @@ for n in range(1, 37):
 JOBS["HH22496N"] = _dlg_pieces
 
 # --- HH20143SA - Horizon Construction Services ---
-# Hood 1 (taper, confirmed by Caio): 1A alone (depth 900->600), 1B/1C alone
-# (tapered / non-standard shape).
+# Read directly off the real drawing (2026-08-26), resolving what was an
+# open question as of 2026-08-12. Two corrections from the earlier version:
+#
+# 1. The vertical "legs" on hoods 2-6 are NOT welded returns. The legend
+#    distinguishes JN (straight joiner) from LJN (commercial L-shaped
+#    joiner) - each leg is a separate straight piece of sheet, mechanically
+#    joined to the horizontal piece by an LJN, not a welded corner fold.
+#    They carry none of the solo-forcing properties (no returns, not
+#    tapered, not angled) - so they're ordinary pairable HH450 pieces, same
+#    as everything else at that depth. No more UNCERTAIN flag needed.
+# 2. Hoods 3 and 4 actually have 5 pieces each (A/B/C/D/E), not 3 - the
+#    page details table confirms it (4 Joiners + 4 H-Sections = 4 joints,
+#    which needs 5 pieces). The earlier version was missing the D piece on
+#    both and had the remaining run as one piece instead of two.
+#
+# Hood 1 (taper, confirmed by Caio): 1A/1B/1C all solo (tapered shape).
 _horizon_pieces = [
     Piece("HH20143SA", "1A", 900, 1340, tapered=True),
     Piece("HH20143SA", "1B", 573.7, 1645, tapered=True),
     Piece("HH20143SA", "1C", 200, 1645, tapered=True),
 ]
-# Hoods 2, 3, 4, 5, 6: U-shaped wraps (A=left leg, B=top, C=right leg), all
-# constant HH450, joined by L-shaped joiners - Caio said he's NOT SURE
-# whether the vertical legs (A/C) count as "returns". Flagging rather than
-# guessing.
-_u_shape_hoods = {
-    "2": {"A": 1200, "B": 2150, "C": 1200},
-    "3": {"A": 1200, "B": 7760, "C": 1200},
-    "4": {"A": 1200, "B": 7730, "C": 1200},
-    "5": {"A": 1200, "B": 1790, "C": 1200},
-    "6": {"A": 1200, "B": 1790, "C": 1200},
+# Hoods 2, 5, 6: 3-piece U-shapes (leg, top, leg), all HH450.
+# Hoods 3, 4: 5-piece runs (leg, 3 horizontal segments, leg), all HH450.
+# The middle segment lengths on 3/4 are read off the drawing's dimension
+# lines, not cross-checked against a second source the way the confirmed
+# jobs were - worth a quick glance if this job ever needs re-verifying.
+_horizon_runs = {
+    "2": [1198.5, 2147, 1198.5],
+    "3": [1198.5, 2583, 2584, 2584, 1198.5],
+    "4": [1198.5, 2573, 2574, 2574, 1198.5],
+    "5": [1198.5, 1787, 1198.5],
+    "6": [1198.5, 1787, 1198.5],
 }
-for hood, segs in _u_shape_hoods.items():
-    _horizon_pieces.append(Piece("HH20143SA", f"{hood}A", 450, segs["A"],
-                                  uncertain="is this vertical leg a 'return'? not confirmed"))
-    _horizon_pieces.append(Piece("HH20143SA", f"{hood}B", 450, segs["B"]))
-    _horizon_pieces.append(Piece("HH20143SA", f"{hood}C", 450, segs["C"],
-                                  uncertain="is this vertical leg a 'return'? not confirmed"))
+_letters = "ABCDE"
+for hood, lengths in _horizon_runs.items():
+    for letter, length in zip(_letters, lengths):
+        _horizon_pieces.append(Piece("HH20143SA", f"{hood}{letter}", 450, length))
 JOBS["HH20143SA"] = _horizon_pieces

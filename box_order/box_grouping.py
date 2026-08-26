@@ -23,12 +23,14 @@ from the Final Drawings folder), plus one rule change confirmed 2026-08-26:
      box lengths across the job as close to equal as possible (Caio confirmed
      this is a general goal, applied manually and inconsistently today).
 
-STILL UNCONFIRMED (carried over from 2026-08-12, not yet resolved):
+STILL UNCONFIRMED (carried over from 2026-08-12):
   - Whether this solo-forcing list is complete.
-  - Horizon HH20143SA Hoods 2-6: are the vertical legs of the U-shaped wraps
-    "returns" (must go alone) or not? Pieces with uncertain=... are a guess,
-    not a fact - the tool flags them instead of silently deciding.
   - Any box weight limit (none known yet).
+
+RESOLVED 2026-08-26: Horizon HH20143SA Hoods 2-6's vertical legs are NOT
+returns - checked against the real drawing. They're separate straight
+pieces joined by a hardware part (LJN), not a welded corner fold, so none
+of the solo-forcing rules apply to them. See known_jobs.py.
 
 KNOWN LIMITATION (found 2026-08-26 while porting/verifying this file): when
 a same-depth pool has an odd number of pieces (3, 5, ...), the "pop longest
