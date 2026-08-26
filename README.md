@@ -25,9 +25,48 @@ in places — see "Rules" below for where they disagree.
   with a job's boxes. Every formula (box length, sorted print view, label
   sheets, DWO checklist) is left exactly as the template has it.
 - `box_order/template/` — the real DWO template, as used by dispatch today.
+- `box_order/palletizing.py` — greedy pallet-loading heuristic (see "Pallet
+  layout" below).
+- `box_order/plotly_view.py` — renders a pallet layout as a 3D Plotly figure.
+- `box_order/ai_reader.py` — calls Claude to read a job card PDF and draft
+  a piece list. Untested against a live job card (no API key existed while
+  building this) — verify against a real one once a key is configured.
+- `streamlit_app.py` — the web app tying it together: upload a job card
+  (or paste pieces by hand), see box groupings and a 3D pallet view live,
+  download the finished DWO. Deploy via share.streamlit.io pointed at this
+  repo, main file `streamlit_app.py`; needs `ANTHROPIC_API_KEY` in the
+  app's secrets for the AI-read feature (everything else works without it).
 
-Not built yet: any input method that isn't hand-written Python (the 6 known
-jobs are hardcoded). No UI. No PDF parsing.
+## Pallet layout
+
+Box physical dimensions (2026-08-26, Caio's placeholder numbers, easy to
+change — see `box_order/palletizing.py`):
+- length = the box's own cut length (`base_length_mm`, from the formula
+  above)
+- width = depth = that box's hood depth + 200mm clearance
+- height = 600mm flat, regardless of hood size
+
+Pallets are 1200mm squares; a box's length determines how many pallets get
+joined end to end in a row (`ceil(length / 1200)`, not capped at 2 — some
+boxes already run past 8000mm). Boxes are grouped by depth (since width
+depends on depth) onto separate rows and stacked up to 2 high per footprint.
+This is a greedy heuristic, not an optimal packer — good enough to see the
+shape of a load, not a promise of the fewest possible pallets. Known gap:
+a box wider than 1200mm (any hood depth ≥ 1000mm) will overhang its pallet
+in the view rather than span two pallets side-by-side — not handled yet.
+
+Still no real answer on: max stack weight, or whether 2-high is actually
+the right stacking limit — both are placeholders pending real numbers.
+
+## Input methods
+
+- **Web app** (`streamlit_app.py`): paste pieces into the table, or upload
+  a job card PDF and have Claude draft the table (reviewed before anything
+  computes).
+- **Direct Python**: hardcoded `Piece()` lists, as in `known_jobs.py`.
+
+No non-AI, non-Python input method exists (no CSV import, no manual Excel
+input sheet) — not needed yet, add if it turns out to matter.
 
 ## Rules
 
@@ -141,10 +180,10 @@ write_job("JOB123", "Some Client", boxes,
 
 ## Open design questions (not yet decided)
 
-- **Input**: hoods are hardcoded Python today. Real jobs should come from
-  "Job Cards" — same hood drawings as the client-facing Final Drawings
-  PDFs, minus client info — but no sample has been available to design a
-  parser against yet.
-- **Interface**: nothing built yet. Candidates discussed: a small local web
-  UI (paste a hood list, see live box groupings, download the filled DWO),
-  vs. staying script-only. Not settled.
+- **AI job-card reading accuracy**: untested against a real job card end to
+  end (see `ai_reader.py`). Every job card read by hand this session needed
+  at least one correction after a closer look — expect the same from the
+  AI draft, which is exactly why it's a draft shown for review, not
+  auto-trusted.
+- **Pallet numbers**: box clearance (200mm), height (600mm), and stack
+  limit (2 high) are all placeholders — see "Pallet layout" above.
