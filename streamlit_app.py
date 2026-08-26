@@ -18,7 +18,15 @@ import streamlit as st
 from box_order.box_grouping import Piece, group_into_boxes
 from box_order.known_jobs import JOBS
 from box_order.labels import box_labels_html
-from box_order.palletizing import pack_pallets, total_boxes, total_hoods, total_pallets, total_weight_kg
+from box_order.palletizing import (
+    pack_pallets,
+    row_fits,
+    row_utilization,
+    total_boxes,
+    total_hoods,
+    total_pallets,
+    total_weight_kg,
+)
 from box_order.plotly_view import pallet_load_figure
 from box_order.write_to_template import write_job
 
@@ -203,6 +211,14 @@ with st.sidebar:
     joiners = st.number_input("Joiners", min_value=0, value=0, step=1, key="joiners")
 
     st.divider()
+    with st.expander("Logistics assumptions (placeholders)"):
+        st.number_input("Freight rate ($/pallet)", min_value=0.0, value=50.0, step=5.0, key="freight_rate")
+        st.number_input("Truck max length (mm)", min_value=0, value=13600, step=100, key="truck_length_mm")
+        st.number_input("Truck max width (mm)", min_value=0, value=2450, step=50, key="truck_width_mm")
+        st.number_input("Truck max height (mm)", min_value=0, value=2700, step=50, key="truck_height_mm")
+        st.caption("All placeholder numbers (a generic semi-trailer) - set your real rate and vehicle dimensions.")
+
+    st.divider()
     st.selectbox("Or load an example job", ["-"] + list(JOBS.keys()),
                  key="example_choice", on_change=_load_example)
 
@@ -349,12 +365,27 @@ with left:
 with right:
     st.subheader("Pallet load")
     rows_ = pack_pallets(boxes)
+    freight_cost = total_pallets(rows_) * st.session_state["freight_rate"]
+    weight_kg = total_weight_kg(rows_)
+    weight_display = f"{weight_kg / 1000:.2f} t" if weight_kg >= 1000 else f"{weight_kg:.0f} kg"
 
-    m1, m2, m3, m4 = st.columns(4)
+    m1, m2, m3 = st.columns(3)
     m1.metric("Pallets", total_pallets(rows_))
     m2.metric("Boxes", total_boxes(rows_))
     m3.metric("Hoods", total_hoods(rows_))
-    m4.metric("Est. weight", f"{total_weight_kg(rows_):.0f} kg")
+    m4, m5 = st.columns(2)
+    m4.metric("Est. weight", weight_display)
+    m5.metric("Est. freight", f"${freight_cost:,.0f}")
+
+    truck_w = st.session_state["truck_width_mm"]
+    truck_h = st.session_state["truck_height_mm"]
+    truck_l = st.session_state["truck_length_mm"]
+    bad_rows = [i for i, r in enumerate(rows_, start=1) if not row_fits(r, truck_w, truck_h)]
+    lined_up_length = sum(r.row_length_mm for r in rows_)
+    if bad_rows:
+        st.warning(f"Row(s) {', '.join(map(str, bad_rows))} are wider or taller than the truck dimensions set in the sidebar.")
+    if lined_up_length > truck_l:
+        st.caption(f"⚠ If every row were lined up end to end, that's {lined_up_length:,.0f}mm - longer than the {truck_l:,.0f}mm truck length. Rows can sit side-by-side across the truck's width instead, so this isn't a hard fail - just a rough signal, not a real loading plan.")
 
     st.plotly_chart(pallet_load_figure(rows_), use_container_width=True)
 
@@ -369,6 +400,8 @@ with right:
             "W (mm)": r.row_width_mm,
             "H (mm)": r.row_height_mm,
             "Weight (kg)": r.weight_kg,
+            "Utilization": f"{row_utilization(r) * 100:.0f}%",
+            "Fits truck?": "Yes" if row_fits(r, truck_w, truck_h) else "No",
         }
         for i, r in enumerate(rows_, start=1)
     ]), use_container_width=True, hide_index=True)
@@ -376,5 +409,8 @@ with right:
     st.caption(
         "Box size = that box's hood depth + 200mm (width/depth), 600mm height. "
         "Max 2 boxes stacked per footprint. Weight is a flat 15kg/box placeholder "
-        "until a real formula replaces it. All placeholder numbers - tell me and I'll change them."
+        "until a real formula replaces it. Utilization = boxes' volume / the row's "
+        "available pallet-footprint x max-stack-height volume - a low number means "
+        "that row is carrying less than it could. All placeholder numbers - tell me "
+        "and I'll change them."
     )

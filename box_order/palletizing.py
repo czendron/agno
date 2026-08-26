@@ -131,3 +131,28 @@ def total_hoods(rows: List[PalletRow]) -> int:
 
 def total_weight_kg(rows: List[PalletRow]) -> float:
     return sum(r.weight_kg for r in rows)
+
+
+def row_utilization(row: PalletRow) -> float:
+    """Volume utilization: boxes' combined volume / the row's available
+    pallet-footprint x max-stack-height volume. 0-1. Penalizes both an
+    under-stacked row and boxes shorter than their row's pallet length -
+    a single number for "how much of this row is actually earning its
+    keep," not a promise about real packing efficiency (this heuristic
+    doesn't try to minimize pallets, just reports how the greedy result
+    came out)."""
+    if not row.boxes:
+        return 0.0
+    used = sum(p.length_mm * p.width_mm * p.height_mm for p in row.boxes)
+    available = row.row_length_mm * row.row_width_mm * (MAX_STACK_HIGH * BOX_HEIGHT_MM)
+    return used / available if available else 0.0
+
+
+def row_fits(row: PalletRow, max_width_mm: float, max_height_mm: float) -> bool:
+    """Width and height are hard per-row constraints - a row wider or
+    taller than the vehicle can't fit no matter how rows are arranged.
+    Length isn't checked here since multiple rows can sit side-by-side
+    across the vehicle's width instead of only end to end - see the
+    "if lined up end to end" total in the app for an approximate,
+    conservative length reference instead of a hard per-row check."""
+    return row.row_width_mm <= max_width_mm and row.row_height_mm <= max_height_mm
