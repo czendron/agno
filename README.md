@@ -94,7 +94,8 @@ change — see `box_order/palletizing.py`):
 - length = the box's own cut length (`base_length_mm`, from the formula
   above)
 - width = depth = that box's hood depth + 200mm clearance
-- height = 600mm flat, regardless of hood size
+- height = 150mm for a solo (1-hood) box, 200mm for a paired (2-hood) box
+  (updated 2026-08-26 — was a flat 600mm for any box before this)
 
 Pallets are 1200mm squares; a box's length determines how many pallets get
 joined end to end in a row (`ceil(length / 1200)`, not capped at 2 — some

@@ -410,8 +410,9 @@ with right:
     ]), use_container_width=True, hide_index=True)
 
     st.caption(
-        "Box size = that box's hood depth + 200mm (width/depth), 600mm height. "
-        "Max 2 boxes stacked per footprint. Weight is a flat 15kg/box placeholder "
+        "Box size = that box's hood depth + 200mm (width/depth), 150mm height for "
+        "a solo box or 200mm for a paired box. Max 2 boxes stacked per footprint. "
+        "Weight is a flat 15kg/box placeholder "
         "until a real formula replaces it. Utilization = boxes' volume / the row's "
         "available pallet-footprint x max-stack-height volume - a low number means "
         "that row is carrying less than it could. All placeholder numbers - tell me "
