@@ -176,6 +176,13 @@ JOBS["HH22246"] = [
 # so on down to the piece next to 2A (2L, mirroring 2B). This is a
 # confirmed technique, not a one-off guess - reuse it on future jobs with
 # the same shape.
+#
+# Orientation (Caio, 2026-08-26): the top run (2B-2F) is a "fixing
+# flange" - the flange stays straight, doesn't fold 90deg - so regular
+# (the default). The bottom run (2H-2L) is an inverted hood - the lip
+# folds to the same size as the flange. Doesn't change this job's box
+# count (regular and inverted can share a box since the 2026-08-26 rule
+# update, and the dimensions already matched), but it's the correct data.
 JOBS["HH19239N"] = [
     Piece("HH19239N", "1A", 600, 2265, returns=1),
     Piece("HH19239N", "1B", 600, 963, returns=0),
@@ -187,9 +194,9 @@ JOBS["HH19239N"] = [
     Piece("HH19239N", "2E", 300, 2547, returns=0),
     Piece("HH19239N", "2F", 300, 2548, returns=0),
     Piece("HH19239N", "2G", 300, 1360, returns=2),
-    Piece("HH19239N", "2H", 300, 2548, returns=0),  # mirrors 2F
-    Piece("HH19239N", "2I", 300, 2547, returns=0),  # mirrors 2E
-    Piece("HH19239N", "2J", 300, 2547, returns=0),  # mirrors 2D
-    Piece("HH19239N", "2K", 300, 2547, returns=0),  # mirrors 2C
-    Piece("HH19239N", "2L", 300, 2547, returns=0),  # mirrors 2B
+    Piece("HH19239N", "2H", 300, 2548, returns=0, orientation="inverted"),  # mirrors 2F
+    Piece("HH19239N", "2I", 300, 2547, returns=0, orientation="inverted"),  # mirrors 2E
+    Piece("HH19239N", "2J", 300, 2547, returns=0, orientation="inverted"),  # mirrors 2D
+    Piece("HH19239N", "2K", 300, 2547, returns=0, orientation="inverted"),  # mirrors 2C
+    Piece("HH19239N", "2L", 300, 2547, returns=0, orientation="inverted"),  # mirrors 2B
 ]

@@ -49,6 +49,9 @@ EXAMPLE_CLIENTS = {
     "HH23104N": "Architects Ink",
     "HH22496N": "DLG Aluminium & Glazing",
     "HH20143SA": "Horizon Construction Services",
+    "HH19634N": "Westbury Constructions",
+    "HH22246": "Renovare",
+    "HH19239N": "J.R. Prime",
 }
 
 
