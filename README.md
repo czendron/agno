@@ -107,9 +107,18 @@ pallets." A box longer than 2 pallets overhangs in the view rather than
 getting a 3rd — that's the confirmed behavior, not a bug, and it does
 change the pallet/freight totals on jobs that used to need 3, like DLG,
 Horizon, and HH19239N). Boxes are grouped by depth (since width depends on
-depth) onto separate rows and stacked up to 2 high per footprint. This is
-a greedy heuristic, not an optimal packer — good enough to see the shape
-of a load, not a promise of the fewest possible pallets. Known gap: a box
+depth) onto separate rows and stacked per footprint up to a **1.2m total
+height ceiling** (`TOTAL_STACK_HEIGHT_CEILING_MM`, confirmed 2026-08-27:
+pallet + boxes together can't exceed 1.2m) — checked against each stack's
+actual cumulative height, so it reproduces Caio's stated examples exactly
+(170mm boxes stack 6 high, 260mm stack 4 high — 1050mm available after
+the 150mm pallet, 1050 // 170 = 6, 1050 // 260 = 4) while also handling a
+mixed stack correctly (a 170mm and a 260mm box together, say), not just
+those two flat cases. Deep hoods get an extra hard cap on top of that
+regardless of the height math: HH900+ depth maxes at 4 high, HH1200+
+maxes at 2 (`max_boxes_by_depth()`). This is a greedy heuristic, not an
+optimal packer — good enough to see the shape of a load, not a promise of
+the fewest possible pallets. Known gap: a box
 wider than 1200mm (any hood depth ≥ 1000mm) will overhang its pallet in
 the view rather than span two pallets side-by-side — not handled yet.
 
@@ -120,9 +129,6 @@ actually do yet):
 - Box width formula (depth bucketed to a standard size + 80mm, + flange
   depth for reveal hoods) — the flange-depth part also needs a new field
   on `Piece` that doesn't exist yet.
-- Stacking limit as a derived "1.2m total height ÷ box height" (6 high at
-  170mm, 4 at 260mm) with hard overrides for deep hoods (HH900 max 4,
-  HH1200 max 2) — currently still a flat 2-high cap.
 - Max weight per pallet (250kg) — not currently checked at all.
 - Pallet size selection — pallets actually come in (at least) three sizes
   (Euro 1200×800, Standard 1200×1200, 1200×1500 for HH1200), each with its
