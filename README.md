@@ -89,22 +89,46 @@ setup yet — don't assume either way until that's actually verified.
 
 ## Pallet layout
 
-Box physical dimensions (2026-08-26, Caio's placeholder numbers, easy to
-change — see `box_order/palletizing.py`):
+Box physical dimensions (2026-08-27, confirmed by Caio against the real
+"Estimating Dispatch Rules" doc, unless noted — see `box_order/palletizing.py`):
 - length = the box's own cut length (`base_length_mm`, from the formula
   above)
-- width = depth = that box's hood depth + 200mm clearance
-- height = 150mm for a solo (1-hood) box, 200mm for a paired (2-hood) box
-  (updated 2026-08-26 — was a flat 600mm for any box before this)
+- width = depth = that box's hood depth + 200mm clearance — **still a
+  placeholder, not yet confirmed**; the source doc gives a different
+  formula (depth bucketed to a standard size, +80mm, +flange depth for
+  reveal hoods) that hasn't been checked against this app yet
+- height = 170mm, or 260mm if the box has a return (confirmed 2026-08-27 —
+  replaces an earlier, wrong hood-count-based guess of 150/200mm)
 
 Pallets are 1200mm squares; a box's length determines how many pallets get
-joined end to end in a row (`ceil(length / 1200)`, not capped at 2 — some
-boxes already run past 8000mm). Boxes are grouped by depth (since width
-depends on depth) onto separate rows and stacked up to 2 high per footprint.
-This is a greedy heuristic, not an optimal packer — good enough to see the
-shape of a load, not a promise of the fewest possible pallets. Known gap:
-a box wider than 1200mm (any hood depth ≥ 1000mm) will overhang its pallet
-in the view rather than span two pallets side-by-side — not handled yet.
+joined end to end in a row (`ceil(length / 1200)`, **capped at 2 — never
+3 or more**, confirmed 2026-08-27: "at the base of the stack we use 2
+pallets." A box longer than 2 pallets overhangs in the view rather than
+getting a 3rd — that's the confirmed behavior, not a bug, and it does
+change the pallet/freight totals on jobs that used to need 3, like DLG,
+Horizon, and HH19239N). Boxes are grouped by depth (since width depends on
+depth) onto separate rows and stacked up to 2 high per footprint. This is
+a greedy heuristic, not an optimal packer — good enough to see the shape
+of a load, not a promise of the fewest possible pallets. Known gap: a box
+wider than 1200mm (any hood depth ≥ 1000mm) will overhang its pallet in
+the view rather than span two pallets side-by-side — not handled yet.
+
+**Still open, not yet confirmed** (see "Estimating Dispatch Rules" doc,
+2026-05-21 — this is a real internal document, not a placeholder guess,
+but its numbers haven't all been checked against what this app should
+actually do yet):
+- Box width formula (depth bucketed to a standard size + 80mm, + flange
+  depth for reveal hoods) — the flange-depth part also needs a new field
+  on `Piece` that doesn't exist yet.
+- Stacking limit as a derived "1.2m total height ÷ box height" (6 high at
+  170mm, 4 at 260mm) with hard overrides for deep hoods (HH900 max 4,
+  HH1200 max 2) — currently still a flat 2-high cap.
+- Max weight per pallet (250kg) — not currently checked at all.
+- Pallet size selection — pallets actually come in (at least) three sizes
+  (Euro 1200×800, Standard 1200×1200, 1200×1500 for HH1200), each with its
+  own side-by-side hood capacity; this app still models one flat
+  1200×1200 size and never packs boxes side-by-side across a pallet's
+  width.
 
 Still no real answer on: max stack weight, or whether 2-high is actually
 the right stacking limit — both are placeholders pending real numbers.

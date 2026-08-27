@@ -1,26 +1,32 @@
 """
 Turns a job's boxes into a pallet layout for the 3D view.
 
-Box physical dimensions (2026-08-26, Caio's placeholder numbers - change
-freely, everything downstream reads from these constants):
+Box physical dimensions (2026-08-27, confirmed by Caio against the real
+"Estimating Dispatch Rules" doc - change freely if that changes, everything
+downstream reads from these constants):
   - length = the box's own base_length_mm (already computed - the cut
     length formula in box_grouping.py)
-  - width = depth = (that box's hood depth) + BOX_XY_CLEARANCE_MM
-  - height = BOX_HEIGHT_BY_HOOD_COUNT[hoods in the box] - 150mm for a
-    solo box, 200mm for a paired box (2026-08-26, Caio) - taller boxes
-    hold more hoods, so height now depends on the box's own hood count,
-    not a single flat number.
+  - width = depth = (that box's hood depth) + BOX_XY_CLEARANCE_MM - still
+    the 2026-08-26 placeholder; the source doc gives a different formula
+    (depth bucketed to a standard size, +80mm, +flange depth for reveal
+    hoods) but that's NOT confirmed to apply here yet - don't change this
+    without checking, see README "Open design questions".
+  - height = BOX_HEIGHT_RETURN_MM (260mm) if the box has a return
+    (box.returns > 0), else BOX_HEIGHT_NO_RETURN_MM (170mm) - confirmed by
+    Caio 2026-08-27, replaces an earlier (wrong) hood-count-based guess.
 
 Pallets are PALLET_SIZE_MM squares; boxes lie with their length running
-along a row of however many pallets get joined end to end
-(ceil(length / PALLET_SIZE_MM) - not capped at 2, some boxes run past
-8000mm). Boxes are grouped by depth (since width depends on depth) onto
-separate rows, sorted longest-first, and stacked up to MAX_STACK_HIGH
-per footprint before starting a new row - a stacked footprint can mix a
-solo and a paired box, so stacking tracks each box's own actual height
-rather than assuming a uniform one. This is a greedy heuristic, not an
-optimal packer - good enough to see the shape of a load, not a promise of
-the fewest possible pallets.
+along a row of however many pallets get joined end to end. Capped at
+MAX_PALLETS_PER_ROW (2) - confirmed by Caio 2026-08-27: "at the base of
+the stack we use 2 pallets. Never 3 or more." A box longer than 2 pallets
+will overhang in the model rather than get a 3rd - that's the confirmed
+behavior, not a bug. Boxes are grouped by depth (since width depends on
+depth) onto separate rows, sorted longest-first, and stacked up to
+MAX_STACK_HIGH per footprint before starting a new row - a stacked
+footprint can mix a solo and a paired box, so stacking tracks each box's
+own actual height rather than assuming a uniform one. This is a greedy
+heuristic, not an optimal packer - good enough to see the shape of a
+load, not a promise of the fewest possible pallets.
 
 Weight (2026-08-26): BOX_WEIGHT_KG is a flat 15kg/box placeholder, not a
 real calculation - Caio's explicit instruction was to stub this until an
@@ -39,9 +45,11 @@ from box_order.box_grouping import Box
 PALLET_SIZE_MM = 1200
 PALLET_THICKNESS_MM = 150  # pallet itself (the timber/plastic base), not a box - matches plotly_view's render
 BOX_XY_CLEARANCE_MM = 200
-BOX_HEIGHT_BY_HOOD_COUNT = {1: 150, 2: 200}  # keyed by hoods per box (rule 1 caps this at 2)
-MAX_BOX_HEIGHT_MM = max(BOX_HEIGHT_BY_HOOD_COUNT.values())  # tallest a box can be - used as the utilization ceiling
+BOX_HEIGHT_NO_RETURN_MM = 170  # confirmed by Caio 2026-08-27 (Estimating Dispatch Rules doc)
+BOX_HEIGHT_RETURN_MM = 260  # a box containing a return needs the taller box
+MAX_BOX_HEIGHT_MM = max(BOX_HEIGHT_NO_RETURN_MM, BOX_HEIGHT_RETURN_MM)  # used as the utilization ceiling
 MAX_STACK_HIGH = 2  # boxes stacked per footprint - placeholder, no real limit known yet
+MAX_PALLETS_PER_ROW = 2  # confirmed by Caio 2026-08-27 - never 3+, a longer box just overhangs
 BOX_WEIGHT_KG = 15  # flat placeholder per box until real weight calc exists (2026-08-26)
 
 
@@ -62,7 +70,7 @@ class PlacedBox:
 
     @property
     def height_mm(self) -> float:
-        return BOX_HEIGHT_BY_HOOD_COUNT[len(self.box.pieces)]
+        return BOX_HEIGHT_RETURN_MM if self.box.returns > 0 else BOX_HEIGHT_NO_RETURN_MM
 
 
 @dataclass
@@ -112,7 +120,7 @@ def pack_pallets(boxes: List[Box]) -> List[PalletRow]:
         stack_used = 0
         stack_height_mm = 0.0
         for box in group:
-            needed_pallets = -(-int(box.base_length_mm) // PALLET_SIZE_MM)  # ceil div
+            needed_pallets = min(-(-int(box.base_length_mm) // PALLET_SIZE_MM), MAX_PALLETS_PER_ROW)  # ceil div, capped
             if row is None or stack_used >= MAX_STACK_HIGH or needed_pallets > row.pallet_count:
                 row = PalletRow(depth_mm=depth_mm, pallet_count=needed_pallets)
                 rows.append(row)

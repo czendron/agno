@@ -410,8 +410,10 @@ with right:
     ]), use_container_width=True, hide_index=True)
 
     st.caption(
-        "Box size = that box's hood depth + 200mm (width/depth), 150mm height for "
-        "a solo box or 200mm for a paired box. Max 2 boxes stacked per footprint. "
+        "Box size = that box's hood depth + 200mm (width/depth), 170mm height, or "
+        "260mm if the box has a return. Max 2 boxes stacked per footprint, max 2 "
+        "pallets end to end per row (a longer box overhangs rather than getting a "
+        "3rd pallet). "
         "Weight is a flat 15kg/box placeholder "
         "until a real formula replaces it. Utilization = boxes' volume / the row's "
         "available pallet-footprint x max-stack-height volume - a low number means "
