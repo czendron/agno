@@ -82,7 +82,9 @@ def max_boxes_by_depth(depth_mm: float) -> Optional[int]:
 @dataclass
 class PlacedBox:
     box: Box
-    x_mm: float  # position of the box's near corner, pallet-row coordinate frame
+    x_mm: float  # position of the box's near corner, pallet-row coordinate frame -
+                 # negative when the box overhangs its row (see pack_pallets): the
+                 # overhang is centered across both ends, not left hanging off one
     y_mm: float
     z_mm: float
 
@@ -156,7 +158,8 @@ def pack_pallets(boxes: List[Box]) -> List[PalletRow]:
                 rows.append(row)
                 stack_used = 0
                 stack_height_mm = 0.0
-            placed = PlacedBox(box=box, x_mm=0, y_mm=0, z_mm=stack_height_mm)
+            overhang_mm = max(0.0, box.base_length_mm - row.pallet_count * PALLET_SIZE_MM)
+            placed = PlacedBox(box=box, x_mm=-overhang_mm / 2, y_mm=0, z_mm=stack_height_mm)
             row.boxes.append(placed)
             stack_height_mm += box_h  # box heights vary, so stack on actual cumulative height, not a flat multiple
             stack_used += 1

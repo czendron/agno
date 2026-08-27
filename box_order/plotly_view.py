@@ -56,7 +56,7 @@ def pallet_load_figure(rows: List[PalletRow]) -> go.Figure:
             color = BOX_COLORS[idx % len(BOX_COLORS)]
             y0 = y_cursor + (PALLET_SIZE_MM - placed.width_mm) / 2
             traces.append(_cuboid_trace(
-                0, y0, placed.z_mm,
+                placed.x_mm, y0, placed.z_mm,
                 placed.length_mm, placed.width_mm, placed.height_mm,
                 color=color,
                 name=f"Box: {placed.box.label} ({placed.length_mm:.0f}x{placed.width_mm:.0f}x{placed.height_mm:.0f}mm)",
