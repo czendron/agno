@@ -17,10 +17,10 @@ in places — see "Rules" below for where they disagree.
 
 - `box_order/box_grouping.py` — the grouping engine (`Piece`, `Box`,
   `group_into_boxes`). Pure logic, no file I/O.
-- `box_order/known_jobs.py` — piece dimensions for 8 real jobs, read off the
+- `box_order/known_jobs.py` — piece dimensions for 9 real jobs, read off the
   Final Drawings / job card PDFs. Varying confidence — see file for which
   are confirmed.
-- `box_order/verify_known_jobs.py` — runs the engine against those 8 jobs
+- `box_order/verify_known_jobs.py` — runs the engine against those 9 jobs
   and checks results. Run with `python -m box_order.verify_known_jobs`.
 - `box_order/write_to_template.py` — fills a copy of the real DWO template
   with a job's boxes. Every formula (box length, sorted print view, label
@@ -229,10 +229,33 @@ as their own confirmed data point in `known_jobs.py`. All 10 boxes matched
 Caio's box order exactly once this was applied - see
 `verify_known_jobs.py`.
 
+**Resolved 2026-08-26 (the general shape of the returns rule):** job
+HH19239N (J.R. Prime) turned out to need both the Horizon-style and
+Westbury-style behavior on the same job card, which is what pinned down
+the actual general rule underneath both: **a vertical piece gets 1 return
+per real corner it touches; a horizontal piece always gets 0, no matter
+how many corners it touches.** Westbury's "legs=1, top=0" was this rule
+applied to an open 3-piece U, where each leg only ever touches 1 corner.
+HH19239N's Hood 2 is a closed rectangular loop (four JN-jointed straight
+runs around a ~13m opening, long enough that each run is split into
+several pieces) - its two vertical end pieces each touch 2 corners (top
+run + bottom run), so they get returns=**2** each, while every horizontal
+segment still gets 0 regardless. Caio's own framing: *"when we have a
+full surround (a closed square or rectangle) or L-shapes, the vertical
+hood will always have a return (one or two)."* This also settled a
+data-completeness question on the same job: only half of Hood 2 (the top
+run) was dimensioned on the job card provided - the other half wasn't on
+any page included. Caio confirmed the general technique for that gap:
+when a symmetric shape's other half isn't dimensioned, mirror the
+dimensioned half, matching each piece to its mirror position (not just
+reusing the same lengths in any order) - a confirmed technique to reuse on
+future jobs shaped like this, not a one-off guess. See the per-piece
+breakdown in `known_jobs.py` and `verify_known_jobs.py`.
+
 ## Running it
 
 ```
-python -m box_order.verify_known_jobs   # engine sanity check against 8 real jobs
+python -m box_order.verify_known_jobs   # engine sanity check against 9 real jobs
 ```
 
 ```python
@@ -257,3 +280,12 @@ write_job("JOB123", "Some Client", boxes,
   auto-trusted.
 - **Pallet numbers**: box clearance (200mm), height (600mm), and stack
   limit (2 high) are all placeholders — see "Pallet layout" above.
+
+**Not actually an open question, but worth stating plainly since it kept
+coming up:** job cards are extracted from the Final Drawings, so a title
+block claiming "page 2 of 3" when only 2 pages were provided is normal,
+not a sign of missing data (confirmed by Caio, 2026-08-26). Only treat it
+as a real gap if a piece the box order actually needs turns out to be
+undimensioned anywhere in what's provided — and even then, check first
+whether it's a symmetric shape whose other half can be mirrored (see the
+HH19239N note above) before asking.

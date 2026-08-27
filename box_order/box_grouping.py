@@ -45,6 +45,22 @@ where it sits in the run; the plain in-line JN joints between straight
 horizontal segments don't count, since there's no angle there. See the
 per-piece breakdown in known_jobs.py.
 
+RESOLVED 2026-08-26 (the general shape of the returns rule): confirmed
+across three jobs (Horizon, Westbury HH19634N, and HH19239N) that this
+comes down to one consistent mechanism - a VERTICAL piece gets 1 return
+per real corner (direction change) it touches, while a HORIZONTAL piece
+gets 0 returns regardless of how many corners it touches. Westbury's
+"legs=1, top=0" was this rule applied to an open 3-piece U (each leg
+touches exactly 1 corner). HH19239N's Hood 2 is a closed rectangular loop
+- its two vertical end pieces each touch 2 corners (one where the top run
+meets them, one where the bottom run does), so they get returns=2 each;
+every horizontal run segment, even the ones directly touching a corner,
+still gets 0. Caio's framing: "when we have a full surround (a closed
+square or rectangle) or L-shapes, the vertical hood will always have a
+return (one or two)." Plain in-line JN joints between two horizontal
+segments (no direction change) still don't count, per the Horizon note
+above. See the per-piece breakdown in known_jobs.py.
+
 RESOLVED 2026-08-26 (odd-pool tie-break): earlier versions of this file
 paired same-depth odd pools via naive repeated "pop longest + pop shortest",
 which always left the *middle* piece solo. On HH23104N (Architects Ink) this

@@ -1,10 +1,10 @@
 """
-Runs the box-grouping engine against the 8 known jobs and checks results.
+Runs the box-grouping engine against the 9 known jobs and checks results.
 
-XP0096 / HH23173N / HH23341N / HH23104N / HH19634N / HH22246 are confirmed
-- these are asserted strictly. HH22496N / HH20143SA are not fully confirmed
-- these are printed for a human to review, not asserted, so this script
-doesn't manufacture false confidence about them.
+XP0096 / HH23173N / HH23341N / HH23104N / HH19634N / HH22246 / HH19239N are
+confirmed - these are asserted strictly. HH22496N / HH20143SA are not fully
+confirmed - these are printed for a human to review, not asserted, so this
+script doesn't manufacture false confidence about them.
 
 Run with: python -m box_order.verify_known_jobs
 """
@@ -45,17 +45,12 @@ def check_confirmed(job_id: str) -> None:
     print()
 
 
-def check_hh19634n() -> None:
-    """Fully confirmed by Caio (2026-08-26): 10 boxes, exact labels, and
-    base lengths that pin down the per-piece returns (legs=1, tops=0) -
-    the part of this entry most likely to regress silently."""
-    job_id = "HH19634N"
+def check_confirmed_with_lengths(job_id: str, expected: list) -> None:
+    """Like check_confirmed, but also pins down base_length_mm - for
+    entries where the per-piece returns (not just the pairing) are the
+    fragile, easy-to-regress part. expected is a list of
+    (label, base_length_mm) tuples, in the order boxes are produced."""
     boxes = group_into_boxes(JOBS[job_id])
-    expected = [
-        ("1A", 2270), ("1C", 2270), ("2A", 2270), ("2C", 2270),
-        ("3A", 2140), ("3C", 2140), ("4A", 2140), ("4C", 2140),
-        ("1B & 2B", 1170), ("3B & 4B", 1120),
-    ]
     actual = [(b.label, b.base_length_mm) for b in boxes]
     if actual == expected:
         print(f"PASS  {job_id}: {[a[0] for a in actual]}")
@@ -77,7 +72,25 @@ def review_only(job_id: str) -> None:
 if __name__ == "__main__":
     for job_id in ["XP0096", "HH23173N", "HH23341N", "HH23104N", "HH22246"]:
         check_confirmed(job_id)
-    check_hh19634n()
+
+    # HH19634N: fully confirmed by Caio (2026-08-26) - 10 boxes, and base
+    # lengths that pin down the per-piece returns (legs=1, tops=0).
+    check_confirmed_with_lengths("HH19634N", [
+        ("1A", 2270), ("1C", 2270), ("2A", 2270), ("2C", 2270),
+        ("3A", 2140), ("3C", 2140), ("4A", 2140), ("4C", 2140),
+        ("1B & 2B", 1170), ("3B & 4B", 1120),
+    ])
+
+    # HH19239N: fully confirmed by Caio (2026-08-26) - 10 boxes, and base
+    # lengths that pin down 1A/1C's returns=1 (2720) and 2A/2G's
+    # returns=2 (1910, the closed-loop case that generalized the rule).
+    check_confirmed_with_lengths("HH19239N", [
+        ("1A", 2720), ("1C", 2720), ("2A", 1910), ("2G", 1910),
+        ("1B", 1320),
+        ("2F & 2L", 2900), ("2H & 2K", 2900), ("2B & 2J", 2900),
+        ("2C & 2I", 2900), ("2D & 2E", 2900),
+    ])
+
     for job_id in REVIEW_ONLY:
         review_only(job_id)
 

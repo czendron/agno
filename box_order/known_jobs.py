@@ -1,15 +1,22 @@
 """
-Piece dimensions for 8 real jobs, read off the Final Drawings / job card
+Piece dimensions for 9 real jobs, read off the Final Drawings / job card
 PDFs.
 
 Confidence varies by job - see verify_known_jobs.py, which checks the
 confirmed jobs strictly and only prints (doesn't assert) the rest:
 
-  - XP0096, HH23173N, HH23341N, HH23104N, HH19634N, HH22246: confirmed by
-    Caio against what dispatch actually did. Should match exactly.
+  - XP0096, HH23173N, HH23341N, HH23104N, HH19634N, HH22246, HH19239N:
+    confirmed by Caio against what dispatch actually did. Should match
+    exactly.
   - HH22496N (DLG), HH20143SA (Horizon): included, but partly flagged
     UNCERTAIN per the open questions in box_grouping.py. Review, don't
     trust blindly.
+
+Job cards are extracted from the Final Drawings and often only include
+some of the pages the drawing set's own title block claims (e.g. "page 2
+of 3") - that's expected, not a sign of missing data, unless a piece
+actually needed for the box order turns out to be undimensioned anywhere
+in what's provided (see HH19239N below for how that's handled).
 """
 
 from box_order.box_grouping import Piece
@@ -140,4 +147,49 @@ JOBS["HH22246"] = [
     Piece("HH22246", "1", 450, 800),
     Piece("HH22246", "2", 450, 1400),
     Piece("HH22246", "3", 450, 1850),
+]
+
+# --- HH19239N - J.R. Prime (confirmed by Caio 2026-08-26) ---
+# Two hoods, both JN-jointed, both on the same job card - the one that
+# pinned down the general shape of the returns rule (see box_grouping.py):
+# a vertical piece gets 1 return per real corner it touches, a horizontal
+# piece always gets 0, no matter how many corners it touches.
+#
+# Hood 1 (depth 600mm - HH500 nominal, 600mm O/D, both shown on the
+# drawing so O/D wins per the reveal-hood rule): an open 3-piece U, same
+# shape and rule as Westbury - legs 1A/1C touch 1 corner each (returns=1),
+# top 1B touches 2 corners but is horizontal (returns=0).
+#
+# Hood 2 (depth 300mm - HH200 nominal, 300mm O/D): a closed rectangular
+# loop around a ~13m-wide opening, not a 3-piece U - four straight runs of
+# HH300 profile joined by JN at 4 real corners, long enough that each run
+# is itself split into several straight (no-corner) pieces. The two
+# vertical end pieces (2A, 2G) each touch 2 corners (top run + bottom
+# run), so returns=2 each - the case that generalized the rule above.
+#
+# Only the TOP run (2A-2G) is dimensioned on the job card; the BOTTOM run
+# (2G-2A the other way, i.e. 2H-2L) isn't dimensioned anywhere in the
+# pages provided. Caio confirmed the general technique for this: when a
+# symmetric shape's other half isn't dimensioned, mirror the dimensioned
+# half - "same work to vertical position as well", i.e. the piece next to
+# 2G on the bottom (2H) mirrors the piece next to 2G on the top (2F), and
+# so on down to the piece next to 2A (2L, mirroring 2B). This is a
+# confirmed technique, not a one-off guess - reuse it on future jobs with
+# the same shape.
+JOBS["HH19239N"] = [
+    Piece("HH19239N", "1A", 600, 2265, returns=1),
+    Piece("HH19239N", "1B", 600, 963, returns=0),
+    Piece("HH19239N", "1C", 600, 2265, returns=1),
+    Piece("HH19239N", "2A", 300, 1360, returns=2),
+    Piece("HH19239N", "2B", 300, 2547, returns=0),
+    Piece("HH19239N", "2C", 300, 2547, returns=0),
+    Piece("HH19239N", "2D", 300, 2547, returns=0),
+    Piece("HH19239N", "2E", 300, 2547, returns=0),
+    Piece("HH19239N", "2F", 300, 2548, returns=0),
+    Piece("HH19239N", "2G", 300, 1360, returns=2),
+    Piece("HH19239N", "2H", 300, 2548, returns=0),  # mirrors 2F
+    Piece("HH19239N", "2I", 300, 2547, returns=0),  # mirrors 2E
+    Piece("HH19239N", "2J", 300, 2547, returns=0),  # mirrors 2D
+    Piece("HH19239N", "2K", 300, 2547, returns=0),  # mirrors 2C
+    Piece("HH19239N", "2L", 300, 2547, returns=0),  # mirrors 2B
 ]
