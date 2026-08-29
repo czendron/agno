@@ -1,13 +1,14 @@
 """
-Piece dimensions for 9 real jobs, read off the Final Drawings / job card
+Piece dimensions for 10 real jobs, read off the Final Drawings / job card
 PDFs.
 
 Confidence varies by job - see verify_known_jobs.py, which checks the
 confirmed jobs strictly and only prints (doesn't assert) the rest:
 
-  - XP0096, HH23173N, HH23341N, HH23104N, HH19634N, HH22246, HH19239N:
-    confirmed by Caio against what dispatch actually did. Should match
-    exactly.
+  - XP0096, HH23173N, HH23341N, HH23104N, HH19634N, HH22246, HH19239N,
+    HH17435: confirmed by Caio against what dispatch actually did (or, for
+    HH17435, unambiguous from the depth-alone solo rule - no pairing/tie
+    -break logic even comes into play). Should match exactly.
   - HH22496N (DLG), HH20143SA (Horizon): included, but partly flagged
     UNCERTAIN per the open questions in box_grouping.py. Review, don't
     trust blindly.
@@ -199,4 +200,34 @@ JOBS["HH19239N"] = [
     Piece("HH19239N", "2J", 300, 2547, returns=0, orientation="inverted"),  # mirrors 2D
     Piece("HH19239N", "2K", 300, 2547, returns=0, orientation="inverted"),  # mirrors 2C
     Piece("HH19239N", "2L", 300, 2547, returns=0, orientation="inverted"),  # mirrors 2B
+]
+
+# --- HH17435 (confirmed - unambiguous, depth alone forces every piece
+# solo) ---
+# One straight run (Hood 1), HH900 depth, gauge 6mm, cut into 5 segments
+# by plain JN joiners. Lengths read directly off the drawing's own
+# dimension chain (2583+2583+2584+2584+2584 + 4x10mm gaps = 12958mm,
+# matching the drawing's own "12958 O/A" label exactly). No corners in
+# this run, so returns=0 throughout. Page details table (4 Joiners + 4
+# H-Sections + 5 hood segments = 13 Parts, 12.958 Lineal Metres) is
+# self-consistent with just this one page/hood - despite the drawing
+# saying "Page 1 of 4", nothing needed for THIS hood is missing (see the
+# module docstring's general note on missing pages).
+#
+# Depth 900mm > 600mm forces every piece solo (Rule 3) regardless of the
+# other rules, so this job never touches pairing or the odd-pool tie
+# -break at all - about as unambiguous a case as they come.
+#
+# Two annotation types not seen on any earlier job ("CUT-OUT + ADDITIONAL
+# FLANGE" on 1A, "ANGLE CUT-OUT + ADDITIONAL FLANGE" at the 1C/1D joint)
+# and the explicit "6MM" gauge callout aren't modeled by any Piece field
+# yet - flagged, not acted on, since neither changes this job's outcome.
+# Revisit if a future job's annotations or gauge actually affect grouping
+# or pallet weight.
+JOBS["HH17435"] = [
+    Piece("HH17435", "1A", 900, 2583),
+    Piece("HH17435", "1B", 900, 2583),
+    Piece("HH17435", "1C", 900, 2584),
+    Piece("HH17435", "1D", 900, 2584),
+    Piece("HH17435", "1E", 900, 2584),
 ]

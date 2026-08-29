@@ -17,7 +17,7 @@ in places — see "Rules" below for where they disagree.
 
 - `box_order/box_grouping.py` — the grouping engine (`Piece`, `Box`,
   `group_into_boxes`). Pure logic, no file I/O.
-- `box_order/known_jobs.py` — piece dimensions for 9 real jobs, read off the
+- `box_order/known_jobs.py` — piece dimensions for 10 real jobs, read off the
   Final Drawings / job card PDFs. Varying confidence — see file for which
   are confirmed.
 - `box_order/verify_known_jobs.py` — runs the engine against those 9 jobs
@@ -286,7 +286,7 @@ breakdown in `known_jobs.py` and `verify_known_jobs.py`.
 ## Running it
 
 ```
-python -m box_order.verify_known_jobs   # engine sanity check against 9 real jobs
+python -m box_order.verify_known_jobs   # engine sanity check against 10 real jobs
 ```
 
 ```python

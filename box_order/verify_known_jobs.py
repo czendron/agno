@@ -1,10 +1,10 @@
 """
-Runs the box-grouping engine against the 9 known jobs and checks results.
+Runs the box-grouping engine against the 10 known jobs and checks results.
 
-XP0096 / HH23173N / HH23341N / HH23104N / HH19634N / HH22246 / HH19239N are
-confirmed - these are asserted strictly. HH22496N / HH20143SA are not fully
-confirmed - these are printed for a human to review, not asserted, so this
-script doesn't manufacture false confidence about them.
+XP0096 / HH23173N / HH23341N / HH23104N / HH19634N / HH22246 / HH19239N /
+HH17435 are confirmed - these are asserted strictly. HH22496N / HH20143SA
+are not fully confirmed - these are printed for a human to review, not
+asserted, so this script doesn't manufacture false confidence about them.
 
 Run with: python -m box_order.verify_known_jobs
 """
@@ -26,6 +26,9 @@ CONFIRMED = {
     # rule above (Caio, 2026-08-26): "keep 3 alone and 2 and 1 together...
     # it won't change the sizes, but at least we balance the weight."
     "HH22246": ["2 & 1", "3"],
+    # Depth 900mm > 600mm forces every piece solo (Rule 3) - no pairing or
+    # tie-break logic even comes into play, the least ambiguous job yet.
+    "HH17435": ["1A", "1B", "1C", "1D", "1E"],
 }
 REVIEW_ONLY = {"HH22496N", "HH20143SA"}
 
@@ -70,7 +73,7 @@ def review_only(job_id: str) -> None:
 
 
 if __name__ == "__main__":
-    for job_id in ["XP0096", "HH23173N", "HH23341N", "HH23104N", "HH22246"]:
+    for job_id in ["XP0096", "HH23173N", "HH23341N", "HH23104N", "HH22246", "HH17435"]:
         check_confirmed(job_id)
 
     # HH19634N: fully confirmed by Caio (2026-08-26) - 10 boxes, and base
