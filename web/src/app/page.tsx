@@ -88,8 +88,8 @@ export default function Home() {
             </p>
           )}
 
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
-            <div className="space-y-6 lg:col-span-3">
+          <div className="space-y-8">
+            <div className="space-y-6">
               <div>
                 <h2 className="text-lg font-semibold text-brand-black">Pieces</h2>
                 <p className="mt-1 text-xs text-brand-gray">
@@ -117,7 +117,7 @@ export default function Home() {
               )}
             </div>
 
-            <div className="space-y-4 lg:col-span-2">
+            <div className="space-y-4">
               <h2 className="text-lg font-semibold text-brand-black">Pallet load</h2>
               {palletsResult ? (
                 <>
