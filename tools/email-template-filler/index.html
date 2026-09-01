@@ -1,0 +1,766 @@
+<title>Dispatch Desk</title>
+<style>
+  :root {
+    --bg: #eff1ee;
+    --surface: #ffffff;
+    --surface-2: #f6f8f5;
+    --line: #d8dbd4;
+    --ink: #1b2023;
+    --ink-soft: #5b6368;
+    --ink-faint: #8a9096;
+    --accent: #1f6a78;
+    --accent-strong: #16505c;
+    --accent-soft: #e2eeee;
+    --accent-ink: #ffffff;
+    --good: #2e7d4f;
+    --good-bg: #e4f2e8;
+    --warn: #8a5a00;
+    --warn-bg: #fbf0dc;
+    --shadow: 0 1px 2px rgba(20, 30, 30, 0.06);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14181a;
+      --surface: #1c2124;
+      --surface-2: #20262a;
+      --line: #2b3336;
+      --ink: #eceeea;
+      --ink-soft: #a7afb2;
+      --ink-faint: #737b7e;
+      --accent: #6fc2ce;
+      --accent-strong: #8ad6e0;
+      --accent-soft: #1e3336;
+      --accent-ink: #0b1415;
+      --good: #6fcb92;
+      --good-bg: #16321f;
+      --warn: #e3b04b;
+      --warn-bg: #3a2c0e;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #14181a;
+    --surface: #1c2124;
+    --surface-2: #20262a;
+    --line: #2b3336;
+    --ink: #eceeea;
+    --ink-soft: #a7afb2;
+    --ink-faint: #737b7e;
+    --accent: #6fc2ce;
+    --accent-strong: #8ad6e0;
+    --accent-soft: #1e3336;
+    --accent-ink: #0b1415;
+    --good: #6fcb92;
+    --good-bg: #16321f;
+    --warn: #e3b04b;
+    --warn-bg: #3a2c0e;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+    line-height: 1.5;
+  }
+
+  input, textarea, button, a.btn {
+    font-family: inherit;
+    font-size: 1rem;
+    color: inherit;
+  }
+
+  .mono {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+  }
+
+  .page {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+  }
+
+  .masthead { display: flex; flex-direction: column; gap: 0.5rem; }
+
+  .eyebrow {
+    font-family: "IBM Plex Mono", monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.72rem;
+    color: var(--accent);
+    font-weight: 500;
+    margin: 0;
+  }
+
+  h1 {
+    font-family: "Big Shoulders Display", "Arial Narrow", sans-serif;
+    font-weight: 800;
+    font-size: clamp(2rem, 1.5rem + 2vw, 3rem);
+    line-height: 0.95;
+    letter-spacing: -0.01em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .lede {
+    color: var(--ink-soft);
+    max-width: 60ch;
+    margin: 0;
+    font-size: 1.02rem;
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .panel-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  h2 {
+    font-family: "Big Shoulders Display", "Arial Narrow", sans-serif;
+    font-weight: 700;
+    font-size: 1.4rem;
+    margin: 0;
+    letter-spacing: 0.01em;
+  }
+
+  .link-btn {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 0.2rem 0;
+  }
+  .link-btn:hover { color: var(--accent-strong); }
+
+  .help {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 0.9rem 1.1rem;
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+  }
+  .help ol { margin: 0 0 0.6rem; padding-left: 1.2rem; }
+  .help li { margin-bottom: 0.15rem; }
+  .help p { margin: 0; }
+  .help p + p { margin-top: 0.4rem; }
+
+  textarea#input {
+    width: 100%;
+    min-height: 8rem;
+    resize: vertical;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 0.8rem 0.9rem;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.85rem;
+    color: var(--ink);
+  }
+  textarea#input::placeholder { color: var(--ink-faint); }
+
+  .intake-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border-radius: 3px;
+    border: 1px solid transparent;
+    padding: 0.55rem 1rem;
+    font-weight: 600;
+    font-size: 0.88rem;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+  }
+  .btn.primary {
+    background: var(--accent);
+    color: var(--accent-ink);
+  }
+  .btn.primary:hover { background: var(--accent-strong); }
+  .btn.ghost {
+    background: transparent;
+    border-color: var(--line);
+    color: var(--ink);
+  }
+  .btn.ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .btn.small { padding: 0.35rem 0.7rem; font-size: 0.8rem; }
+  .btn.copied { background: var(--good); border-color: var(--good); color: var(--accent-ink); }
+
+  button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .count { color: var(--ink-faint); font-size: 0.85rem; }
+
+  details.settings { font-size: 0.88rem; }
+  details.settings summary {
+    cursor: pointer;
+    color: var(--ink-soft);
+    font-weight: 600;
+    padding: 0.2rem 0;
+  }
+  .settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.8rem;
+    margin-top: 0.8rem;
+  }
+  .settings-grid label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+  }
+  .settings-grid input {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 0.5rem 0.6rem;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.85rem;
+  }
+  .settings-hint { color: var(--ink-faint); font-size: 0.78rem; margin: 0.6rem 0 0; }
+
+  .results { display: flex; flex-direction: column; gap: 1.1rem; }
+
+  .empty {
+    color: var(--ink-faint);
+    font-size: 0.92rem;
+    padding: 1rem 0;
+    margin: 0;
+  }
+
+  .ticket {
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--good);
+    border-radius: 4px;
+    background: var(--surface-2);
+    padding: 1rem 1.1rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+  .ticket.has-warning { border-left-color: var(--warn); }
+
+  .ticket-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .ticket-id { display: flex; flex-direction: column; gap: 0.15rem; }
+  .ticket-id .job {
+    font-family: "IBM Plex Mono", monospace;
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+  .ticket-id .colour { color: var(--ink-soft); font-size: 0.82rem; }
+
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.76rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
+    background: var(--good-bg);
+    color: var(--good);
+  }
+  .ticket.has-warning .status { background: var(--warn-bg); color: var(--warn); }
+  .status .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: currentColor;
+  }
+
+  .ticket-to {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+  .to-label { color: var(--ink-faint); font-size: 0.78rem; }
+  .to-email { font-family: "IBM Plex Mono", monospace; font-size: 0.85rem; }
+
+  .chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .chip {
+    background: var(--warn-bg);
+    color: var(--warn);
+    font-size: 0.76rem;
+    padding: 0.25rem 0.55rem;
+    border-radius: 3px;
+  }
+
+  textarea.body {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 0.9rem 1rem;
+    font-family: "IBM Plex Sans", sans-serif;
+    font-size: 0.92rem;
+    line-height: 1.55;
+    color: var(--ink);
+    resize: vertical;
+  }
+
+  .ticket-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+
+  details.debug {
+    margin-left: auto;
+    font-size: 0.78rem;
+  }
+  details.debug summary {
+    cursor: pointer;
+    color: var(--ink-faint);
+    font-weight: 600;
+  }
+  .debug-grid {
+    margin-top: 0.6rem;
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.25rem 0.8rem;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.78rem;
+  }
+  .debug-row { display: contents; }
+  .debug-row span:first-child { color: var(--ink-faint); }
+  .debug-row span:last-child { color: var(--ink-soft); }
+
+  @media (max-width: 520px) {
+    details.debug { margin-left: 0; }
+  }
+</style>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+
+<div class="page">
+  <header class="masthead">
+    <p class="eyebrow">Heka Hoods · Dispatch Desk</p>
+    <h1>Powder-coat dispatch emails, from a pasted row</h1>
+    <p class="lede">Paste one or more Smartsheet rows below. Each one turns into a ready-to-send dispatch email — check it over, then copy.</p>
+  </header>
+
+  <section class="panel intake">
+    <div class="panel-head">
+      <h2>1 · Paste rows</h2>
+      <button class="link-btn" id="toggleHelp" type="button" aria-expanded="false">Column order ▾</button>
+    </div>
+    <div class="help" id="helpText" hidden>
+      <ol class="mono">
+        <li>primary</li>
+        <li>colour</li>
+        <li>total linear metres</li>
+        <li>square metres</li>
+        <li>PC drop date</li>
+        <li>PC completion date</li>
+        <li>PC return date</li>
+        <li>PC notes</li>
+        <li>PC QA complete</li>
+        <li>site address</li>
+        <li>site contact</li>
+        <li>email address</li>
+        <li>estimated dispatch date – week of</li>
+        <li>state</li>
+      </ol>
+      <p>Copy straight out of Smartsheet — tabs between columns and quoted multi-line cells (addresses, contacts) are handled automatically. Blank trailing columns are fine.</p>
+      <p>One row per order. Paste as many as you like in one go.</p>
+    </div>
+    <textarea id="input" placeholder="Paste one or more Smartsheet rows here…" spellcheck="false"></textarea>
+    <div class="intake-actions">
+      <button id="generateBtn" class="btn primary" type="button">Generate emails</button>
+      <span class="count" id="rowCount"></span>
+    </div>
+    <details class="settings">
+      <summary>Sender details</summary>
+      <div class="settings-grid">
+        <label>Office phone
+          <input id="setPhone" type="text" autocomplete="off">
+        </label>
+        <label>Sender email
+          <input id="setEmail" type="email" autocomplete="off">
+        </label>
+        <label>Sender name
+          <input id="setName" type="text" autocomplete="off">
+        </label>
+      </div>
+      <p class="settings-hint">Saved in this browser. Applies the next time you click Generate.</p>
+    </details>
+  </section>
+
+  <section class="panel output">
+    <div class="panel-head">
+      <h2>2 · Review &amp; send</h2>
+    </div>
+    <p class="empty" id="emptyState">Nothing generated yet — paste rows above and hit Generate.</p>
+    <div class="results" id="results"></div>
+  </section>
+</div>
+
+<script>
+  const SETTINGS_KEY = 'hh-dispatch-desk:settings';
+  const INPUT_KEY = 'hh-dispatch-desk:lastInput';
+  const DEFAULT_SETTINGS = {
+    officePhone: '07 5406 0886',
+    senderEmail: 'projects@hekahoods.com.au',
+    senderName: 'Caio'
+  };
+  const STATE_RE = /\b(NSW|VIC|QLD|WA|SA|TAS|ACT|NT)\b/i;
+  const POSTCODE_RE = /\b\d{4}\b/;
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  function loadSettings() {
+    try {
+      const raw = localStorage.getItem(SETTINGS_KEY);
+      return raw ? { ...DEFAULT_SETTINGS, ...JSON.parse(raw) } : { ...DEFAULT_SETTINGS };
+    } catch (e) { return { ...DEFAULT_SETTINGS }; }
+  }
+  function saveSettings(s) {
+    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); } catch (e) {}
+  }
+  function saveLastInput(v) {
+    try { localStorage.setItem(INPUT_KEY, v); } catch (e) {}
+  }
+  function loadLastInput() {
+    try { return localStorage.getItem(INPUT_KEY) || ''; } catch (e) { return ''; }
+  }
+
+  function escapeHtml(str) {
+    return String(str ?? '').replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+  }
+
+  function parseTSV(input) {
+    const text = input.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    const rows = [];
+    let row = [], field = '', inQuotes = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (inQuotes) {
+        if (c === '"') {
+          if (text[i + 1] === '"') { field += '"'; i++; }
+          else inQuotes = false;
+        } else field += c;
+      } else if (c === '"' && field === '') {
+        inQuotes = true;
+      } else if (c === '\t') {
+        row.push(field); field = '';
+      } else if (c === '\n') {
+        row.push(field); rows.push(row); row = []; field = '';
+      } else field += c;
+    }
+    row.push(field);
+    if (row.length > 1 || row[0] !== '') rows.push(row);
+    return rows;
+  }
+
+  function isUsableRow(fields) {
+    if (!fields.some(f => f && f.trim())) return false;
+    if ((fields[0] || '').trim().toLowerCase() === 'primary') return false;
+    return true;
+  }
+
+  function extractAddressLine(lines) {
+    if (!lines.length) return '';
+    if (lines.length === 1) return lines[0];
+    const addressish = lines.filter(l => POSTCODE_RE.test(l) || STATE_RE.test(l) || /^\d/.test(l));
+    return (addressish.length ? addressish : lines).join(', ');
+  }
+
+  function parseAddresses(raw) {
+    const text = (raw || '').trim();
+    if (!text) return { site: '', delivery: '' };
+    const buckets = { site: [], delivery: [] };
+    let current = 'site';
+    for (const rawLine of text.split('\n')) {
+      const line = rawLine.trim();
+      if (!line) continue;
+      const siteLabel = line.match(/^site\s*address\s*:?\s*(.*)$/i);
+      if (siteLabel) {
+        current = 'site';
+        if (siteLabel[1]) buckets.site.push(siteLabel[1].trim());
+        continue;
+      }
+      const deliveryLabel = line.match(/^delivery\s*address\s*:?\s*(.*)$/i);
+      if (deliveryLabel) {
+        current = 'delivery';
+        if (deliveryLabel[1]) buckets.delivery.push(deliveryLabel[1].trim());
+        continue;
+      }
+      buckets[current].push(line);
+    }
+    const site = extractAddressLine(buckets.site);
+    const delivery = buckets.delivery.length ? extractAddressLine(buckets.delivery) : site;
+    return { site, delivery };
+  }
+
+  function parseSuburbStatePostcode(addressLine) {
+    if (!addressLine) return '';
+    const m = addressLine.match(/([A-Za-z' .-]+?)\s+(NSW|VIC|QLD|WA|SA|TAS|ACT|NT)\s+(\d{4})/i);
+    if (!m) return '';
+    let suburb = m[1].trim();
+    if (suburb.includes(',')) suburb = suburb.split(',').pop().trim();
+    return `${suburb} ${m[2].toUpperCase()} ${m[3]}`;
+  }
+
+  function parseContact(raw) {
+    const text = (raw || '').replace(/^\s*site\s*contact\s*:?/i, '').trim();
+    if (!text) return null;
+    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+    if (!lines.length) return null;
+    return { name: lines[0], phone: lines[1] || '' };
+  }
+
+  function parseDDMMYY(str) {
+    const m = (str || '').trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+    if (!m) return null;
+    let dd = Number(m[1]), mm = Number(m[2]), yy = Number(m[3]);
+    if (yy < 100) yy += 2000;
+    const d = new Date(Date.UTC(yy, mm - 1, dd));
+    if (d.getUTCFullYear() !== yy || d.getUTCMonth() !== mm - 1 || d.getUTCDate() !== dd) return null;
+    return d;
+  }
+
+  function ordinal(n) {
+    const v = n % 100;
+    if (v >= 11 && v <= 13) return n + 'th';
+    switch (n % 10) {
+      case 1: return n + 'st';
+      case 2: return n + 'nd';
+      case 3: return n + 'rd';
+      default: return n + 'th';
+    }
+  }
+
+  function weekRangeLabel(str) {
+    const d = parseDDMMYY(str);
+    if (!d) return '';
+    const day = d.getUTCDay();
+    const diffToMonday = day === 0 ? -6 : 1 - day;
+    const monday = new Date(d.getTime());
+    monday.setUTCDate(d.getUTCDate() + diffToMonday);
+    const friday = new Date(monday.getTime());
+    friday.setUTCDate(monday.getUTCDate() + 4);
+    const mStart = MONTHS[monday.getUTCMonth()];
+    const mEnd = MONTHS[friday.getUTCMonth()];
+    if (mStart === mEnd) {
+      return `${mStart} ${ordinal(monday.getUTCDate())} – ${ordinal(friday.getUTCDate())}`;
+    }
+    return `${mStart} ${ordinal(monday.getUTCDate())} – ${mEnd} ${ordinal(friday.getUTCDate())}`;
+  }
+
+  function processRow(fields, idx) {
+    const get = i => (fields[i] || '').trim();
+    const primary = get(0);
+    const colour = get(1);
+    const dropDate = get(4);
+    const completionDate = get(5);
+    const addressRaw = fields[9] || '';
+    const contactRaw = fields[10] || '';
+    const email = get(11);
+    const weekOfRaw = get(12);
+
+    const { site, delivery } = parseAddresses(addressRaw);
+    const suburbStatePostcode = parseSuburbStatePostcode(delivery);
+    const contact = parseContact(contactRaw);
+    const weekLabel = weekOfRaw ? weekRangeLabel(weekOfRaw) : '';
+
+    const warnings = [];
+    if (!site) warnings.push('No site address found');
+    if (weekOfRaw && !weekLabel) warnings.push('Could not read the dispatch date (expected DD/MM/YY)');
+    if (!contact) warnings.push('No site contact — used the "missing contact" wording');
+    else if (!contact.phone) warnings.push('Contact found with no phone number');
+    if (site && !suburbStatePostcode) warnings.push('Could not detect suburb/state/postcode');
+    if (!email) warnings.push('No recipient email found');
+
+    const firstName = contact && contact.name ? contact.name.split(/\s+/)[0] : '[first name]';
+    const contactLine = contact && contact.name
+      ? `We currently have ${contact.name} on ${contact.phone || '[phone number]'} listed as the site contact. If these details are correct, no further action is required from your end.`
+      : 'We are currently missing the site contact’s name and phone number. Please reply with these details so we can coordinate delivery efficiently.';
+
+    const settings = loadSettings();
+    const body = `Hi ${firstName},
+I hope you are well.
+Your order for ${site || '[site address]'} has now progressed to powder coating.
+The order is estimated to dispatch our workshop the week of ${weekLabel || '[date & month]'}.
+From the day of dispatch, please allow [transit days] business days for delivery to ${suburbStatePostcode || delivery || '[suburb, state & postcode]'}.
+${contactLine}
+We will contact you once your order has undergone our internal quality assurance check and is ready for dispatch.
+If you have any questions, please feel free to contact the office at ${settings.officePhone} or email me directly at ${settings.senderEmail}.
+Kind regards,
+${settings.senderName}`;
+
+    return {
+      idx, primary, colour, email, body, warnings,
+      debug: {
+        site, suburbStatePostcode: suburbStatePostcode || delivery, weekLabel, contact,
+        dropDate, completionDate
+      }
+    };
+  }
+
+  async function copyText(text, btn) {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (e) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus(); ta.select();
+      try { document.execCommand('copy'); } catch (e2) {}
+      document.body.removeChild(ta);
+    }
+    if (btn) {
+      const original = btn.textContent;
+      btn.textContent = 'Copied';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = original; btn.classList.remove('copied'); }, 1400);
+    }
+  }
+
+  function renderCard(data) {
+    const wrap = document.createElement('article');
+    wrap.className = 'ticket' + (data.warnings.length ? ' has-warning' : '');
+
+    const chips = data.warnings.map(w => `<li class="chip">${escapeHtml(w)}</li>`).join('');
+    const debugRows = [
+      ['Site address', data.debug.site],
+      ['Delivery suburb/state/postcode', data.debug.suburbStatePostcode],
+      ['Dispatch week', data.debug.weekLabel],
+      ['Site contact', data.debug.contact ? `${data.debug.contact.name} — ${data.debug.contact.phone || 'no phone found'}` : 'none found'],
+      ['PC drop date', data.debug.dropDate],
+      ['PC completion date', data.debug.completionDate]
+    ].map(([k, v]) => `<div class="debug-row"><span>${escapeHtml(k)}</span><span>${escapeHtml(v || '—')}</span></div>`).join('');
+
+    wrap.innerHTML = `
+      <header class="ticket-head">
+        <div class="ticket-id">
+          <span class="job mono">${escapeHtml(data.primary || 'Row ' + (data.idx + 1))}</span>
+          <span class="colour">${escapeHtml(data.colour)}</span>
+        </div>
+        <span class="status"><span class="dot"></span>${data.warnings.length ? 'Needs review' : 'Ready'}</span>
+      </header>
+      <div class="ticket-to">
+        <span class="to-label">To</span>
+        <span class="to-email">${escapeHtml(data.email || 'no email found')}</span>
+        <button type="button" class="btn ghost small copy-email">Copy address</button>
+      </div>
+      ${chips ? `<ul class="chips">${chips}</ul>` : ''}
+      <textarea class="body" spellcheck="false" rows="11" aria-label="Email body"></textarea>
+      <footer class="ticket-actions">
+        <button type="button" class="btn primary small copy-body">Copy email</button>
+        <a class="btn ghost small mailto-link" href="#">Open in mail app</a>
+        <details class="debug">
+          <summary>Parsed data</summary>
+          <div class="debug-grid">${debugRows}</div>
+        </details>
+      </footer>
+    `;
+
+    const bodyEl = wrap.querySelector('.body');
+    bodyEl.value = data.body;
+    wrap.querySelector('.copy-body').addEventListener('click', e => copyText(bodyEl.value, e.currentTarget));
+    wrap.querySelector('.copy-email').addEventListener('click', e => copyText(data.email, e.currentTarget));
+
+    const subject = `${data.primary || 'Order update'} — Powder Coating Update`;
+    const mailtoLink = wrap.querySelector('.mailto-link');
+    mailtoLink.addEventListener('click', () => {
+      mailtoLink.href = `mailto:${encodeURIComponent(data.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyEl.value)}`;
+    });
+
+    return wrap;
+  }
+
+  function generate() {
+    const input = document.getElementById('input');
+    saveLastInput(input.value);
+    const rows = parseTSV(input.value).filter(isUsableRow);
+    const results = document.getElementById('results');
+    const empty = document.getElementById('emptyState');
+    const count = document.getElementById('rowCount');
+    results.innerHTML = '';
+
+    if (!rows.length) {
+      empty.hidden = false;
+      count.textContent = '';
+      return;
+    }
+    empty.hidden = true;
+    count.textContent = `${rows.length} order${rows.length > 1 ? 's' : ''} parsed`;
+    rows.forEach((fields, idx) => results.appendChild(renderCard(processRow(fields, idx))));
+  }
+
+  function bindSettings() {
+    const s = loadSettings();
+    const phoneEl = document.getElementById('setPhone');
+    const emailEl = document.getElementById('setEmail');
+    const nameEl = document.getElementById('setName');
+    phoneEl.value = s.officePhone;
+    emailEl.value = s.senderEmail;
+    nameEl.value = s.senderName;
+    [phoneEl, emailEl, nameEl].forEach(el => el.addEventListener('input', () => {
+      saveSettings({ officePhone: phoneEl.value, senderEmail: emailEl.value, senderName: nameEl.value });
+    }));
+  }
+
+  document.getElementById('generateBtn').addEventListener('click', generate);
+  document.getElementById('toggleHelp').addEventListener('click', e => {
+    const el = document.getElementById('helpText');
+    el.hidden = !el.hidden;
+    e.currentTarget.setAttribute('aria-expanded', String(!el.hidden));
+  });
+  document.getElementById('input').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) generate();
+  });
+
+  bindSettings();
+  const savedInput = loadLastInput();
+  if (savedInput) {
+    document.getElementById('input').value = savedInput;
+    generate();
+  }
+</script>
