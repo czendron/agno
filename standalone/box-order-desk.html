@@ -1,0 +1,784 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Box Order Desk</title>
+<style>
+  :root {
+    --bg: #eff1ee;
+    --surface: #ffffff;
+    --surface-2: #f6f8f5;
+    --line: #d8dbd4;
+    --ink: #1b2023;
+    --ink-soft: #5b6368;
+    --ink-faint: #8a9096;
+    --accent: #1f6a78;
+    --accent-strong: #16505c;
+    --accent-soft: #e2eeee;
+    --accent-ink: #ffffff;
+    --good: #2e7d4f;
+    --good-bg: #e4f2e8;
+    --warn: #8a5a00;
+    --warn-bg: #fbf0dc;
+    --shadow: 0 1px 2px rgba(20, 30, 30, 0.06);
+    --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-display: "Arial Narrow", "Helvetica Neue Condensed", "Segoe UI", Arial, sans-serif;
+    --font-mono: ui-monospace, "Cascadia Mono", "Segoe UI Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14181a;
+      --surface: #1c2124;
+      --surface-2: #20262a;
+      --line: #2b3336;
+      --ink: #eceeea;
+      --ink-soft: #a7afb2;
+      --ink-faint: #737b7e;
+      --accent: #6fc2ce;
+      --accent-strong: #8ad6e0;
+      --accent-soft: #1e3336;
+      --accent-ink: #0b1415;
+      --good: #6fcb92;
+      --good-bg: #16321f;
+      --warn: #e3b04b;
+      --warn-bg: #3a2c0e;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #14181a;
+    --surface: #1c2124;
+    --surface-2: #20262a;
+    --line: #2b3336;
+    --ink: #eceeea;
+    --ink-soft: #a7afb2;
+    --ink-faint: #737b7e;
+    --accent: #6fc2ce;
+    --accent-strong: #8ad6e0;
+    --accent-soft: #1e3336;
+    --accent-ink: #0b1415;
+    --good: #6fcb92;
+    --good-bg: #16321f;
+    --warn: #e3b04b;
+    --warn-bg: #3a2c0e;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    line-height: 1.5;
+  }
+
+  input, select, button {
+    font-family: inherit;
+    font-size: 1rem;
+    color: inherit;
+  }
+
+  .mono { font-family: var(--font-mono); }
+
+  .page {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+  }
+
+  .masthead { display: flex; flex-direction: column; gap: 0.5rem; }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.72rem;
+    color: var(--accent);
+    font-weight: 500;
+    margin: 0;
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(2rem, 1.5rem + 2vw, 3rem);
+    line-height: 0.95;
+    letter-spacing: -0.01em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .lede {
+    color: var(--ink-soft);
+    max-width: 64ch;
+    margin: 0;
+    font-size: 1.02rem;
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .panel-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  h2 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.4rem;
+    margin: 0;
+    letter-spacing: 0.01em;
+  }
+
+  .link-btn {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 0.2rem 0;
+  }
+  .link-btn:hover { color: var(--accent-strong); }
+
+  .help {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 0.9rem 1.1rem;
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+  }
+  .help p { margin: 0; }
+  .help p + p { margin-top: 0.5rem; }
+
+  .settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.8rem;
+  }
+  .settings-grid label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+  }
+  .settings-grid input {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 0.5rem 0.6rem;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+  }
+  .settings-hint { color: var(--ink-faint); font-size: 0.78rem; margin: 0; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border-radius: 3px;
+    border: 1px solid transparent;
+    padding: 0.55rem 1rem;
+    font-weight: 600;
+    font-size: 0.88rem;
+    cursor: pointer;
+    transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+  }
+  .btn.ghost {
+    background: transparent;
+    border-color: var(--line);
+    color: var(--ink);
+  }
+  .btn.ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .btn.small { padding: 0.4rem 0.8rem; font-size: 0.82rem; }
+  .btn.danger:hover { border-color: #b5442e; color: #b5442e; }
+
+  button:focus-visible, input:focus-visible, select:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .count { color: var(--ink-faint); font-size: 0.85rem; margin: 0 0 0.6rem; }
+
+  .empty {
+    color: var(--ink-faint);
+    font-size: 0.92rem;
+    padding: 0.5rem 0;
+    margin: 0;
+  }
+
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 4px; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+  }
+  thead tr {
+    background: var(--surface-2);
+    text-align: left;
+  }
+  th {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-faint);
+    font-weight: 600;
+    padding: 0.55rem 0.6rem;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--line);
+  }
+  td {
+    padding: 0.4rem 0.6rem;
+    border-bottom: 1px solid var(--line);
+    vertical-align: middle;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tr.flagged td { background: var(--warn-bg); }
+
+  .pieces-table input, .pieces-table select {
+    width: 100%;
+    min-width: 5.5rem;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 0.4rem 0.5rem;
+    font-size: 0.86rem;
+  }
+  .pieces-table input:disabled { color: var(--ink-faint); background: var(--surface); }
+  .pieces-table td:first-child input { min-width: 4.5rem; }
+  .pieces-table select { min-width: 9.5rem; }
+
+  .row-remove {
+    background: none;
+    border: none;
+    color: var(--ink-faint);
+    cursor: pointer;
+    font-size: 1.1rem;
+    line-height: 1;
+    padding: 0.3rem 0.5rem;
+    border-radius: 3px;
+  }
+  .row-remove:hover { color: #b5442e; background: var(--surface-2); }
+
+  .notes-cell { color: var(--ink-soft); }
+
+  .intake-actions { display: flex; gap: 0.8rem; align-items: center; }
+
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 0.7rem;
+  }
+  .stat-tile {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 0.7rem 0.9rem;
+  }
+  .stat-tile .label {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-faint);
+    display: block;
+    margin-bottom: 0.15rem;
+  }
+  .stat-tile .value {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.5rem;
+  }
+
+  footer.foot {
+    color: var(--ink-faint);
+    font-size: 0.78rem;
+    text-align: center;
+    padding-top: 0.5rem;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="masthead">
+    <p class="eyebrow">Heka Hoods &middot; Box Order Desk</p>
+    <h1>Box &amp; pallet plan, from pieces you type in</h1>
+    <p class="lede">Enter each piece&rsquo;s depth, length and shape by hand. Nothing is uploaded, read from a
+      file, or sent anywhere &mdash; this page has no server behind it. Boxes and pallet load are computed
+      instantly, right here in the browser.</p>
+  </header>
+
+  <section class="panel">
+    <div class="panel-head"><h2>1 &middot; Job</h2></div>
+    <div class="settings-grid">
+      <label>Job #
+        <input id="jobId" type="text" placeholder="e.g. HH17435" autocomplete="off">
+      </label>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2>2 &middot; Pieces</h2>
+      <button class="link-btn" id="toggleHelp" type="button" aria-expanded="false">What&rsquo;s &ldquo;Hood type&rdquo;? &#9662;</button>
+    </div>
+    <div class="help" id="helpText" hidden>
+      <p><strong>Straight</strong> &mdash; a plain run, no corners. Covers most jobs, so every new row starts here.</p>
+      <p><strong>L-shape (1 return)</strong> &mdash; one welded corner on this piece.</p>
+      <p><strong>U-shape / closed loop (2 returns)</strong> &mdash; two welded corners on this piece, e.g. a leg inside a full surround.</p>
+      <p><strong>Tapered</strong> &mdash; non-constant depth / non-standard shape.</p>
+      <p><strong>Angled corner</strong> &mdash; mitred at an angle (5/10/15/30/45&deg;) rather than a square weld.</p>
+      <p>Any of these forces that piece into its own box on dispatch &mdash; same as a depth over 600mm.</p>
+    </div>
+
+    <div class="table-wrap">
+      <table class="pieces-table">
+        <thead>
+          <tr>
+            <th>Hood ID</th><th>Depth (mm)</th><th>Length (mm)</th><th>Hood type</th><th>Angle (&deg;)</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="piecesBody"></tbody>
+      </table>
+    </div>
+    <div class="intake-actions">
+      <button id="addPieceBtn" class="btn ghost small" type="button">+ Add piece</button>
+      <button id="clearBtn" class="btn ghost small" type="button">Clear all</button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>3 &middot; Result</h2></div>
+    <p class="empty" id="resultEmpty">Add at least one piece above (with a Hood ID, depth and length) to see box groupings.</p>
+    <div id="resultWrap" hidden>
+      <p class="count" id="resultCount"></p>
+      <div class="table-wrap">
+        <table class="result-table">
+          <thead>
+            <tr><th>Box</th><th>Hoods</th><th>Depth (mm)</th><th>Length H1</th><th>Length H2</th><th>Returns</th><th>Base (mm)</th><th>Lid (mm)</th><th>Notes</th></tr>
+          </thead>
+          <tbody id="resultBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>4 &middot; Pallet load</h2></div>
+    <div id="palletWrap" hidden>
+      <div class="stat-row" id="statRow"></div>
+      <div class="table-wrap">
+        <table class="result-table">
+          <thead>
+            <tr><th>Row</th><th>Pallets</th><th>Boxes</th><th>Hoods</th><th>L (mm)</th><th>W (mm)</th><th>H (mm)</th><th>Weight (kg)</th><th>Utilization</th></tr>
+          </thead>
+          <tbody id="palletBody"></tbody>
+        </table>
+      </div>
+      <p class="settings-hint" style="margin-top:0.8rem;">Box size = that box&rsquo;s hood depth + 200mm (width), 170mm height, or 260mm if the box has a
+        return. Boxes stack up to a 1.2m total height (pallet + boxes) &mdash; with a tighter cap for deep hoods
+        (HH900+: max 4 high, HH1200+: max 2 high). Max 2 pallets end to end per row (a longer box overhangs,
+        centered, rather than getting a 3rd pallet). Weight is a flat 15kg/box placeholder. All placeholder
+        numbers carried over from the main Box Order tool &mdash; not final.</p>
+    </div>
+  </section>
+
+  <footer class="foot">Runs entirely in this browser tab. Refreshing keeps your pieces (stored locally on this device only).</footer>
+</div>
+
+<script>
+  // ---------------------------------------------------------------------
+  // Box-grouping + palletizing engine - a direct port of
+  // box_order/box_grouping.py and box_order/palletizing.py, kept in sync
+  // by hand. If you change a rule in one, change it in the other.
+  // ---------------------------------------------------------------------
+
+  const HOOD_TYPES = {
+    straight: { label: "Straight", returns: 0, tapered: false, angled: false },
+    l_shape: { label: "L-shape (1 return)", returns: 1, tapered: false, angled: false },
+    u_shape: { label: "U-shape / closed loop (2 returns)", returns: 2, tapered: false, angled: false },
+    tapered: { label: "Tapered / non-standard", returns: 0, tapered: true, angled: false },
+    angled: { label: "Angled corner", returns: 0, tapered: false, angled: true },
+  };
+
+  function roundUp10(x) { return Math.ceil(x / 10) * 10; }
+
+  function soloReasons(p) {
+    const reasons = [];
+    if (p.depthMm > 600) reasons.push(`depth ${p.depthMm.toFixed(0)}mm > 600mm`);
+    if (p.returns > 0) reasons.push(`has return (x${p.returns})`);
+    if (p.tapered) reasons.push("tapered / non-standard shape");
+    if (p.angleDeg > 0) reasons.push(`angled (${p.angleDeg.toFixed(0)}°)`);
+    return reasons;
+  }
+
+  function boxFromPieces(pieces, reasons) {
+    const sorted = [...pieces].sort((a, b) => b.lengthMm - a.lengthMm);
+    const returns = Math.max(0, ...pieces.map(p => p.returns));
+    const longest = Math.max(...pieces.map(p => p.lengthMm));
+    const baseLengthMm = roundUp10(longest) + returns * 100 + 350;
+    return {
+      pieces,
+      reasons: reasons || [],
+      label: sorted.map(p => p.label).join(" & "),
+      depthMm: pieces[0].depthMm,
+      lengthH1: sorted[0].lengthMm,
+      lengthH2: sorted.length > 1 ? sorted[1].lengthMm : 0,
+      returns,
+      baseLengthMm,
+      lidLengthMm: baseLengthMm + 40,
+    };
+  }
+
+  // Splits one job's pieces into boxes. Pieces that must go alone (depth
+  // >600mm, has a return, tapered, or angled) are boxed immediately. The
+  // rest are pooled by depth and paired longest-with-shortest, repeatedly.
+  // For an odd-sized pool, the longest piece goes solo (not the leftover
+  // middle piece) - this never changes which box sizes result, only which
+  // piece carries that size alone vs. picks up a partner (balances weight).
+  function groupIntoBoxes(pieces) {
+    const boxes = [];
+    const pairable = [];
+    for (const p of pieces) {
+      const reasons = soloReasons(p);
+      if (reasons.length) boxes.push(boxFromPieces([p], reasons));
+      else pairable.push(p);
+    }
+    // A Map (not a plain object) so pools are visited in first-seen order -
+    // a plain object with numeric-looking keys like "300"/"600" would get
+    // silently reordered ascending by JS regardless of insertion order,
+    // scrambling box order relative to the Python engine's output.
+    const pools = new Map();
+    for (const p of pairable) {
+      if (!pools.has(p.depthMm)) pools.set(p.depthMm, []);
+      pools.get(p.depthMm).push(p);
+    }
+    for (const rawPool of pools.values()) {
+      const pool = rawPool.slice().sort((a, b) => b.lengthMm - a.lengthMm);
+      let solo = null;
+      if (pool.length % 2 === 1) solo = pool.shift();
+      while (pool.length > 1) {
+        const longest = pool.shift();
+        const shortest = pool.pop();
+        boxes.push(boxFromPieces([longest, shortest]));
+      }
+      if (solo) boxes.push(boxFromPieces([solo], ["odd one out in its size/shape pool"]));
+    }
+    return boxes;
+  }
+
+  const PALLET_SIZE_MM = 1200;
+  const PALLET_THICKNESS_MM = 150;
+  const BOX_XY_CLEARANCE_MM = 200;
+  const BOX_HEIGHT_NO_RETURN_MM = 170;
+  const BOX_HEIGHT_RETURN_MM = 260;
+  const TOTAL_STACK_HEIGHT_CEILING_MM = 1200;
+  const DEPTH_STACK_OVERRIDES = [[1200, 2], [900, 4]];
+  const MAX_PALLETS_PER_ROW = 2;
+  const BOX_WEIGHT_KG = 15;
+
+  function boxHeightMm(box) { return box.returns > 0 ? BOX_HEIGHT_RETURN_MM : BOX_HEIGHT_NO_RETURN_MM; }
+  function boxWidthMm(box) { return box.depthMm + BOX_XY_CLEARANCE_MM; }
+
+  function maxBoxesByDepth(depthMm) {
+    for (const [minDepth, cap] of DEPTH_STACK_OVERRIDES) {
+      if (depthMm >= minDepth) return cap;
+    }
+    return null;
+  }
+
+  function packPallets(boxes) {
+    const rows = [];
+    const byDepth = new Map(); // Map, not object - see the note in groupIntoBoxes
+    for (const b of boxes) {
+      if (!byDepth.has(b.depthMm)) byDepth.set(b.depthMm, []);
+      byDepth.get(b.depthMm).push(b);
+    }
+
+    for (const [depthMm, rawGroup] of byDepth) {
+      const group = rawGroup.slice().sort((a, b) => b.baseLengthMm - a.baseLengthMm);
+      const depthCap = maxBoxesByDepth(depthMm);
+      let row = null, stackUsed = 0, stackHeight = 0;
+      for (const box of group) {
+        const neededPallets = Math.min(Math.ceil(box.baseLengthMm / PALLET_SIZE_MM), MAX_PALLETS_PER_ROW);
+        const boxH = boxHeightMm(box);
+        const exceedsHeightCeiling = stackHeight + boxH > (TOTAL_STACK_HEIGHT_CEILING_MM - PALLET_THICKNESS_MM);
+        const exceedsDepthCap = depthCap !== null && stackUsed >= depthCap;
+        if (!row || exceedsHeightCeiling || exceedsDepthCap || neededPallets > row.palletCount) {
+          row = { depthMm, palletCount: neededPallets, boxes: [] };
+          rows.push(row);
+          stackUsed = 0; stackHeight = 0;
+        }
+        const overhangMm = Math.max(0, box.baseLengthMm - row.palletCount * PALLET_SIZE_MM);
+        row.boxes.push({ box, xMm: -overhangMm / 2, yMm: 0, zMm: stackHeight });
+        stackHeight += boxH;
+        stackUsed += 1;
+      }
+    }
+    return rows;
+  }
+
+  function rowStats(row) {
+    const rowLengthMm = row.palletCount * PALLET_SIZE_MM;
+    const rowWidthMm = PALLET_SIZE_MM;
+    const boxCount = row.boxes.length;
+    const hoodCount = row.boxes.reduce((s, p) => s + p.box.pieces.length, 0);
+    const weightKg = boxCount * BOX_WEIGHT_KG;
+    const stackedHeight = row.boxes.length ? Math.max(...row.boxes.map(p => p.zMm + boxHeightMm(p.box))) : 0;
+    const rowHeightMm = PALLET_THICKNESS_MM + stackedHeight;
+    const used = row.boxes.reduce((s, p) => s + p.box.baseLengthMm * boxWidthMm(p.box) * boxHeightMm(p.box), 0);
+    const available = rowLengthMm * rowWidthMm * (TOTAL_STACK_HEIGHT_CEILING_MM - PALLET_THICKNESS_MM);
+    const utilization = available ? used / available : 0;
+    return { rowLengthMm, rowWidthMm, rowHeightMm, boxCount, hoodCount, weightKg, utilization };
+  }
+
+  // ---------------------------------------------------------------------
+  // UI
+  // ---------------------------------------------------------------------
+
+  const STORAGE_KEY = "hh-box-order-desk:state";
+  let rowSeq = 0;
+  let pieceRows = [];
+
+  function newRow(seed) {
+    rowSeq += 1;
+    return Object.assign({
+      uid: rowSeq,
+      id: "",
+      depthMm: "",
+      lengthMm: "",
+      hoodType: "straight",
+      angleDeg: 15,
+    }, seed || {});
+  }
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch (e) { return null; }
+  }
+
+  function saveState() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        jobId: document.getElementById("jobId").value,
+        rows: pieceRows.map(r => ({ id: r.id, depthMm: r.depthMm, lengthMm: r.lengthMm, hoodType: r.hoodType, angleDeg: r.angleDeg })),
+      }));
+    } catch (e) {}
+  }
+
+  function pieceFromRow(r) {
+    const t = HOOD_TYPES[r.hoodType];
+    return {
+      label: r.id.trim(),
+      depthMm: Number(r.depthMm) || 0,
+      lengthMm: Number(r.lengthMm) || 0,
+      returns: t.returns,
+      tapered: t.tapered,
+      angleDeg: t.angled ? (Number(r.angleDeg) || 0) : 0,
+    };
+  }
+
+  function renderPieceRow(r) {
+    const tr = document.createElement("tr");
+    tr.dataset.uid = r.uid;
+
+    const idTd = document.createElement("td");
+    const idInput = document.createElement("input");
+    idInput.value = r.id;
+    idInput.placeholder = "e.g. 1A";
+    idInput.addEventListener("input", e => { r.id = e.target.value; recompute(); });
+    idTd.appendChild(idInput);
+
+    const depthTd = document.createElement("td");
+    const depthInput = document.createElement("input");
+    depthInput.type = "number"; depthInput.min = "0";
+    depthInput.value = r.depthMm;
+    depthInput.addEventListener("input", e => { r.depthMm = e.target.value; recompute(); });
+    depthTd.appendChild(depthInput);
+
+    const lengthTd = document.createElement("td");
+    const lengthInput = document.createElement("input");
+    lengthInput.type = "number"; lengthInput.min = "0";
+    lengthInput.value = r.lengthMm;
+    lengthInput.addEventListener("input", e => { r.lengthMm = e.target.value; recompute(); });
+    lengthTd.appendChild(lengthInput);
+
+    const typeTd = document.createElement("td");
+    const typeSelect = document.createElement("select");
+    for (const [key, t] of Object.entries(HOOD_TYPES)) {
+      const opt = document.createElement("option");
+      opt.value = key; opt.textContent = t.label;
+      if (key === r.hoodType) opt.selected = true;
+      typeSelect.appendChild(opt);
+    }
+    typeSelect.addEventListener("change", e => {
+      r.hoodType = e.target.value;
+      angleInput.disabled = !HOOD_TYPES[r.hoodType].angled;
+      recompute();
+    });
+    typeTd.appendChild(typeSelect);
+
+    const angleTd = document.createElement("td");
+    const angleInput = document.createElement("input");
+    angleInput.type = "number"; angleInput.min = "0"; angleInput.max = "45"; angleInput.step = "5";
+    angleInput.value = r.angleDeg;
+    angleInput.disabled = !HOOD_TYPES[r.hoodType].angled;
+    angleInput.addEventListener("input", e => { r.angleDeg = e.target.value; recompute(); });
+    angleTd.appendChild(angleInput);
+
+    const removeTd = document.createElement("td");
+    const removeBtn = document.createElement("button");
+    removeBtn.className = "row-remove";
+    removeBtn.type = "button";
+    removeBtn.setAttribute("aria-label", "Remove piece");
+    removeBtn.textContent = "×";
+    removeBtn.addEventListener("click", () => {
+      pieceRows = pieceRows.filter(row => row.uid !== r.uid);
+      renderPieceRows();
+      recompute();
+    });
+    removeTd.appendChild(removeBtn);
+
+    tr.append(idTd, depthTd, lengthTd, typeTd, angleTd, removeTd);
+    return tr;
+  }
+
+  function renderPieceRows() {
+    const body = document.getElementById("piecesBody");
+    body.innerHTML = "";
+    for (const r of pieceRows) body.appendChild(renderPieceRow(r));
+  }
+
+  function fmt(n) { return Math.round(n).toLocaleString("en-AU"); }
+  function fmtPct(n) { return `${Math.round(n * 100)}%`; }
+
+  function recompute() {
+    saveState();
+    const valid = pieceRows.filter(r => r.id.trim() && Number(r.depthMm) > 0 && Number(r.lengthMm) > 0);
+    const resultEmpty = document.getElementById("resultEmpty");
+    const resultWrap = document.getElementById("resultWrap");
+    const palletWrap = document.getElementById("palletWrap");
+
+    if (!valid.length) {
+      resultEmpty.hidden = false;
+      resultWrap.hidden = true;
+      palletWrap.hidden = true;
+      return;
+    }
+    resultEmpty.hidden = true;
+    resultWrap.hidden = false;
+    palletWrap.hidden = false;
+
+    const pieces = valid.map(pieceFromRow);
+    const boxes = groupIntoBoxes(pieces);
+    const flaggedCount = 0; // no "uncertain" concept in manual entry - every value here was typed deliberately
+
+    document.getElementById("resultCount").textContent = `${boxes.length} box${boxes.length !== 1 ? "es" : ""}`;
+    const resultBody = document.getElementById("resultBody");
+    resultBody.innerHTML = "";
+    boxes.forEach((box, i) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${i + 1}</td>
+        <td>${box.label}</td>
+        <td>${fmt(box.depthMm)}</td>
+        <td>${fmt(box.lengthH1)}</td>
+        <td>${box.lengthH2 ? fmt(box.lengthH2) : ""}</td>
+        <td>${box.returns}</td>
+        <td>${fmt(box.baseLengthMm)}</td>
+        <td>${fmt(box.lidLengthMm)}</td>
+        <td class="notes-cell">${box.reasons.join("; ")}</td>
+      `;
+      resultBody.appendChild(tr);
+    });
+
+    const rows = packPallets(boxes);
+    const totalPallets = rows.reduce((s, r) => s + r.palletCount, 0);
+    const totalBoxes = rows.reduce((s, r) => s + r.boxes.length, 0);
+    const totalHoods = rows.reduce((s, r) => s + r.boxes.reduce((s2, p) => s2 + p.box.pieces.length, 0), 0);
+    const totalWeight = totalBoxes * BOX_WEIGHT_KG;
+
+    const statRow = document.getElementById("statRow");
+    statRow.innerHTML = `
+      <div class="stat-tile"><span class="label">Pallets</span><span class="value">${totalPallets}</span></div>
+      <div class="stat-tile"><span class="label">Boxes</span><span class="value">${totalBoxes}</span></div>
+      <div class="stat-tile"><span class="label">Hoods</span><span class="value">${totalHoods}</span></div>
+      <div class="stat-tile"><span class="label">Est. weight</span><span class="value">${fmt(totalWeight)}kg</span></div>
+    `;
+
+    const palletBody = document.getElementById("palletBody");
+    palletBody.innerHTML = "";
+    rows.forEach((row, i) => {
+      const s = rowStats(row);
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${i + 1}</td>
+        <td>${row.palletCount}</td>
+        <td>${s.boxCount}</td>
+        <td>${s.hoodCount}</td>
+        <td>${fmt(s.rowLengthMm)}</td>
+        <td>${fmt(s.rowWidthMm)}</td>
+        <td>${fmt(s.rowHeightMm)}</td>
+        <td>${fmt(s.weightKg)}</td>
+        <td>${fmtPct(s.utilization)}</td>
+      `;
+      palletBody.appendChild(tr);
+    });
+  }
+
+  document.getElementById("addPieceBtn").addEventListener("click", () => {
+    pieceRows.push(newRow());
+    renderPieceRows();
+    recompute();
+  });
+  document.getElementById("clearBtn").addEventListener("click", () => {
+    pieceRows = [newRow()];
+    renderPieceRows();
+    recompute();
+  });
+  document.getElementById("jobId").addEventListener("input", saveState);
+  document.getElementById("toggleHelp").addEventListener("click", e => {
+    const el = document.getElementById("helpText");
+    el.hidden = !el.hidden;
+    e.currentTarget.setAttribute("aria-expanded", String(!el.hidden));
+  });
+
+  (function init() {
+    const saved = loadState();
+    if (saved && saved.rows && saved.rows.length) {
+      document.getElementById("jobId").value = saved.jobId || "";
+      pieceRows = saved.rows.map(r => newRow(r));
+    } else {
+      pieceRows = [newRow()];
+    }
+    renderPieceRows();
+    recompute();
+  })();
+</script>
+</body>
+</html>

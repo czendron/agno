@@ -46,6 +46,8 @@ in places — see "Rules" below for where they disagree.
 - `web/` — the other front end: the same app rebuilt in Next.js
   (TypeScript, Tailwind, React), calling `box_order/api.py` instead of
   running Python directly. See "Two front ends" below.
+- `standalone/box-order-desk.html` — a third, offline version: one HTML
+  file, no backend, no uploads — see "Standalone offline tool" below.
 
 ## Two front ends
 
@@ -86,6 +88,33 @@ other projects, but pairing it with the FastAPI backend needs a real
 hosting decision (Vercel's own Python functions, or a small separate host
 for `box_order/api.py`) that hasn't been checked against Vercel's current
 setup yet — don't assume either way until that's actually verified.
+
+## Standalone offline tool
+
+- `standalone/box-order-desk.html` - a third, self-contained version: one
+  HTML file, zero dependencies, zero server calls (no API, no upload, not
+  even the other two front ends' own backend). Open it directly in a
+  browser (double-click, or any static host) and it works. Built
+  2026-09-01 in response to an IP/confidentiality concern about uploading
+  real job card drawings to any third-party service - this version never
+  reads a file at all, you type each piece's depth/length/shape by hand
+  into a table, with a "Hood type" selector (Straight / L-shape / U-shape
+  / Tapered / Angled) defaulting to Straight per piece. Boxes and pallet
+  load are computed live, client-side.
+- Its box-grouping and palletizing logic in the `<script>` tag is a
+  **hand-maintained port** of `box_order/box_grouping.py` and
+  `box_order/palletizing.py` - there's no shared code path with the other
+  two front ends (that's the point: it has to run with zero backend). It
+  was checked for exact parity against all confirmed jobs in
+  `known_jobs.py` before shipping (box order, dimensions, and pallet
+  totals all matched). If you change a rule in the Python engine, the JS
+  port needs the same change made by hand, or the two will silently
+  drift - there's no CI catching that automatically today.
+- Doesn't (yet) generate the actual DWO Excel file - that still needs
+  `box_order/write_to_template.py`, which depends on `openpyxl` and the
+  real template file, so it can't run client-side without a backend. This
+  tool covers steps 1-2 (box grouping, pallet plan) as a quick gut check,
+  not the full dispatch paperwork.
 
 ## Pallet layout
 
