@@ -642,7 +642,15 @@
     };
   }
 
-  async function copyText(text, btn) {
+  function flashCopied(btn) {
+    if (!btn) return;
+    const original = btn.textContent;
+    btn.textContent = 'Copied';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = original; btn.classList.remove('copied'); }, 1400);
+  }
+
+  async function copyPlain(text) {
     try {
       await navigator.clipboard.writeText(text);
     } catch (e) {
@@ -655,12 +663,36 @@
       try { document.execCommand('copy'); } catch (e2) {}
       document.body.removeChild(ta);
     }
-    if (btn) {
-      const original = btn.textContent;
-      btn.textContent = 'Copied';
-      btn.classList.add('copied');
-      setTimeout(() => { btn.textContent = original; btn.classList.remove('copied'); }, 1400);
+  }
+
+  async function copyText(text, btn) {
+    await copyPlain(text);
+    flashCopied(btn);
+  }
+
+  // Wraps ordinal suffixes (1st, 2nd, 3rd, 4th...) in <sup> so the dispatch
+  // week reads like "21st" with a raised "st" once pasted into a rich-text
+  // email client. Plain-text targets still just get "21st".
+  function toRichHtml(text) {
+    const escaped = escapeHtml(text).replace(/\n/g, '<br>');
+    return escaped.replace(/(\d+)(st|nd|rd|th)\b/g, '$1<sup>$2</sup>');
+  }
+
+  async function copyRichText(text, btn) {
+    try {
+      if (!navigator.clipboard || !navigator.clipboard.write || !window.ClipboardItem) {
+        throw new Error('rich clipboard unsupported');
+      }
+      const html = toRichHtml(text);
+      const item = new ClipboardItem({
+        'text/plain': new Blob([text], { type: 'text/plain' }),
+        'text/html': new Blob([html], { type: 'text/html' })
+      });
+      await navigator.clipboard.write([item]);
+    } catch (e) {
+      await copyPlain(text);
     }
+    flashCopied(btn);
   }
 
   function renderCard(data) {
@@ -693,7 +725,7 @@
       ${chips ? `<ul class="chips">${chips}</ul>` : ''}
       <textarea class="body" spellcheck="false" rows="11" aria-label="Email body"></textarea>
       <footer class="ticket-actions">
-        <button type="button" class="btn primary small copy-body">Copy email</button>
+        <button type="button" class="btn primary small copy-body" title="Copies with 1st/2nd/3rd/4th raised, for pasting into Gmail, Outlook or Word">Copy email</button>
         <a class="btn ghost small mailto-link" href="#">Open in mail app</a>
         <details class="debug">
           <summary>Parsed data</summary>
@@ -704,7 +736,7 @@
 
     const bodyEl = wrap.querySelector('.body');
     bodyEl.value = data.body;
-    wrap.querySelector('.copy-body').addEventListener('click', e => copyText(bodyEl.value, e.currentTarget));
+    wrap.querySelector('.copy-body').addEventListener('click', e => copyRichText(bodyEl.value, e.currentTarget));
     wrap.querySelector('.copy-email').addEventListener('click', e => copyText(data.email, e.currentTarget));
 
     const subject = `${data.primary || 'Order update'} — Powder Coating Update`;
