@@ -110,11 +110,25 @@ setup yet — don't assume either way until that's actually verified.
   totals all matched). If you change a rule in the Python engine, the JS
   port needs the same change made by hand, or the two will silently
   drift - there's no CI catching that automatically today.
-- Doesn't (yet) generate the actual DWO Excel file - that still needs
-  `box_order/write_to_template.py`, which depends on `openpyxl` and the
-  real template file, so it can't run client-side without a backend. This
-  tool covers steps 1-2 (box grouping, pallet plan) as a quick gut check,
-  not the full dispatch paperwork.
+- "Generate DWO (.xlsx)" fills a copy of the real template client-side
+  too - the template file itself is base64-embedded in the page (see
+  `TEMPLATE_B64` near the bottom of the `<script>`), unzipped with JSZip
+  (also embedded, no CDN), and only `xl/worksheets/sheet1.xml` (the "BOX
+  ORDER" sheet) is parsed with the browser's own `DOMParser` and edited -
+  the same specific cells `write_to_template.py` touches, nothing else.
+  Every other part of the .xlsx (the other 5 sheets, styles, the company
+  logo image, shared strings, calc settings, printer settings) is
+  repacked as raw untouched bytes from the embedded original. Checked
+  before shipping: byte-diffed the output against the original template
+  (only sheet1.xml differs) and read every filled cell + formula back
+  with openpyxl to confirm it matches `write_to_template.py`'s output
+  exactly. An earlier attempt that fully parsed and rewrote the workbook
+  with a general xlsx library (SheetJS) was scrapped after it silently
+  dropped the logo image, printer settings, and calc-mode settings, and
+  bloated the file 14x - that's why this only touches the one sheet
+  instead of round-tripping the whole workbook.
+- Like the box-grouping port above, if `write_to_template.py` changes
+  which cells it fills, this needs the same change made by hand too.
 
 ## Pallet layout
 
