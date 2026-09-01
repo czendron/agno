@@ -622,16 +622,16 @@
       : 'We are currently missing the site contact’s name and phone number. Please reply with these details so we can coordinate delivery efficiently.';
 
     const settings = loadSettings();
-    const body = `Hi ${firstName},
-I hope you are well.
-Your order for ${site || '[site address]'} has now progressed to powder coating.
-The order is estimated to dispatch our workshop the week of ${weekLabel || '[date & month]'}.
-From the day of dispatch, please allow [transit days] business days for delivery to ${suburbStatePostcode || delivery || '[suburb, state & postcode]'}.
-${contactLine}
-We will contact you once your order has undergone our internal quality assurance check and is ready for dispatch.
-If you have any questions, please feel free to contact the office at ${settings.officePhone} or email me directly at ${settings.senderEmail}.
-Kind regards,
-${settings.senderName}`;
+    const body = [
+      `Hi ${firstName},`,
+      'I hope you are well.',
+      `Your order for ${site || '[site address]'} has now progressed to powder coating.`,
+      `The order is estimated to dispatch our workshop the week of ${weekLabel || '[date & month]'}.`,
+      `From the day of dispatch, please allow [transit days] business days for delivery to ${suburbStatePostcode || delivery || '[suburb, state & postcode]'}.`,
+      contactLine,
+      'We will contact you once your order has undergone our internal quality assurance check and is ready for dispatch.',
+      `If you have any questions, please feel free to contact the office at ${settings.officePhone} or email me directly at ${settings.senderEmail}.`
+    ].join('\n\n') + `\n\nKind regards,\n${settings.senderName}`;
 
     return {
       idx, primary, colour, email, body, warnings,
