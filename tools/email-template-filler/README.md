@@ -1,12 +1,16 @@
 # Dispatch Desk
 
 A single self-contained HTML file that turns pasted Smartsheet rows into ready-to-send
-powder-coating dispatch emails. No build step, no server, no dependencies — open
-`index.html` in any browser.
+powder-coating dispatch emails. No build step, no server, no account, no internet
+connection required — it's one file with inline CSS/JS, system fonts only, and zero
+outbound network calls. Safe to run on a locked-down or air-gapped machine; every
+row you paste stays on your computer, in your browser, for the life of the tab (plus
+whatever `localStorage` remembers between visits, which also never leaves the machine).
 
 ## Use
 
-1. Open `index.html`.
+1. Save/copy `index.html` to your computer and double-click it to open in any browser
+   (Chrome, Edge, Firefox, Safari) — no install, no server, no login.
 2. Copy one or more rows out of Smartsheet (as columns, tab-separated) and paste them
    into the text box. Multiple rows can be pasted at once — one email is generated per row.
 3. Click **Generate emails**.

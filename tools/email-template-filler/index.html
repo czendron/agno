@@ -17,6 +17,9 @@
     --warn: #8a5a00;
     --warn-bg: #fbf0dc;
     --shadow: 0 1px 2px rgba(20, 30, 30, 0.06);
+    --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-display: "Arial Narrow", "Helvetica Neue Condensed", "Segoe UI", Arial, sans-serif;
+    --font-mono: ui-monospace, "Cascadia Mono", "Segoe UI Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   }
 
   @media (prefers-color-scheme: dark) {
@@ -65,7 +68,7 @@
     margin: 0;
     background: var(--bg);
     color: var(--ink);
-    font-family: "IBM Plex Sans", system-ui, sans-serif;
+    font-family: var(--font-sans);
     line-height: 1.5;
   }
 
@@ -76,7 +79,7 @@
   }
 
   .mono {
-    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-family: var(--font-mono);
   }
 
   .page {
@@ -91,7 +94,7 @@
   .masthead { display: flex; flex-direction: column; gap: 0.5rem; }
 
   .eyebrow {
-    font-family: "IBM Plex Mono", monospace;
+    font-family: var(--font-mono);
     text-transform: uppercase;
     letter-spacing: 0.14em;
     font-size: 0.72rem;
@@ -101,7 +104,7 @@
   }
 
   h1 {
-    font-family: "Big Shoulders Display", "Arial Narrow", sans-serif;
+    font-family: var(--font-display);
     font-weight: 800;
     font-size: clamp(2rem, 1.5rem + 2vw, 3rem);
     line-height: 0.95;
@@ -137,7 +140,7 @@
   }
 
   h2 {
-    font-family: "Big Shoulders Display", "Arial Narrow", sans-serif;
+    font-family: var(--font-display);
     font-weight: 700;
     font-size: 1.4rem;
     margin: 0;
@@ -176,7 +179,7 @@
     border: 1px solid var(--line);
     border-radius: 4px;
     padding: 0.8rem 0.9rem;
-    font-family: "IBM Plex Mono", monospace;
+    font-family: var(--font-mono);
     font-size: 0.85rem;
     color: var(--ink);
   }
@@ -248,7 +251,7 @@
     border: 1px solid var(--line);
     border-radius: 4px;
     padding: 0.5rem 0.6rem;
-    font-family: "IBM Plex Mono", monospace;
+    font-family: var(--font-mono);
     font-size: 0.85rem;
   }
   .settings-hint { color: var(--ink-faint); font-size: 0.78rem; margin: 0.6rem 0 0; }
@@ -284,7 +287,7 @@
 
   .ticket-id { display: flex; flex-direction: column; gap: 0.15rem; }
   .ticket-id .job {
-    font-family: "IBM Plex Mono", monospace;
+    font-family: var(--font-mono);
     font-weight: 600;
     font-size: 0.95rem;
   }
@@ -316,7 +319,7 @@
     flex-wrap: wrap;
   }
   .to-label { color: var(--ink-faint); font-size: 0.78rem; }
-  .to-email { font-family: "IBM Plex Mono", monospace; font-size: 0.85rem; }
+  .to-email { font-family: var(--font-mono); font-size: 0.85rem; }
 
   .chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
   .chip {
@@ -333,7 +336,7 @@
     border: 1px solid var(--line);
     border-radius: 4px;
     padding: 0.9rem 1rem;
-    font-family: "IBM Plex Sans", sans-serif;
+    font-family: var(--font-sans);
     font-size: 0.92rem;
     line-height: 1.55;
     color: var(--ink);
@@ -361,7 +364,7 @@
     display: grid;
     grid-template-columns: max-content 1fr;
     gap: 0.25rem 0.8rem;
-    font-family: "IBM Plex Mono", monospace;
+    font-family: var(--font-mono);
     font-size: 0.78rem;
   }
   .debug-row { display: contents; }
@@ -372,8 +375,6 @@
     details.debug { margin-left: 0; }
   }
 </style>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
 
 <div class="page">
   <header class="masthead">
