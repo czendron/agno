@@ -411,6 +411,7 @@
     <textarea id="input" placeholder="Paste one or more Smartsheet rows here…" spellcheck="false"></textarea>
     <div class="intake-actions">
       <button id="generateBtn" class="btn primary" type="button">Generate emails</button>
+      <button id="clearBtn" class="btn ghost" type="button" title="Clears the pasted rows and generated emails, including the copy saved in this browser">Clear</button>
       <span class="count" id="rowCount"></span>
     </div>
     <details class="settings">
@@ -787,6 +788,16 @@
     rows.forEach((fields, idx) => results.appendChild(renderCard(processRow(fields, idx))));
   }
 
+  function clearAll() {
+    const input = document.getElementById('input');
+    input.value = '';
+    saveLastInput('');
+    document.getElementById('results').innerHTML = '';
+    document.getElementById('emptyState').hidden = false;
+    document.getElementById('rowCount').textContent = '';
+    input.focus();
+  }
+
   function bindSettings() {
     const s = loadSettings();
     const phoneEl = document.getElementById('setPhone');
@@ -801,6 +812,7 @@
   }
 
   document.getElementById('generateBtn').addEventListener('click', generate);
+  document.getElementById('clearBtn').addEventListener('click', clearAll);
   document.getElementById('toggleHelp').addEventListener('click', e => {
     const el = document.getElementById('helpText');
     el.hidden = !el.hidden;
