@@ -63,6 +63,7 @@ class PieceIn(BaseModel):
     tapered: bool = False
     angle_deg: float = 0
     returns: int = 0
+    is_express: bool = False
     uncertain: Optional[str] = None
 
 
@@ -91,7 +92,7 @@ def _to_pieces(pieces_in: List[PieceIn], job_id: str = "JOB") -> List[Piece]:
         Piece(
             job_id=job_id, label=p.id, depth_mm=p.depth_mm, length_mm=p.length_mm,
             orientation=p.orientation, tapered=p.tapered, angle_deg=p.angle_deg,
-            returns=p.returns, uncertain=p.uncertain,
+            returns=p.returns, is_express=p.is_express, uncertain=p.uncertain,
         )
         for p in pieces_in
     ]
@@ -129,7 +130,8 @@ def get_job(job_id: str):
         "pieces": [
             {"id": p.label, "depth_mm": p.depth_mm, "length_mm": p.length_mm,
              "orientation": p.orientation, "tapered": p.tapered,
-             "angle_deg": p.angle_deg, "returns": p.returns, "uncertain": p.uncertain}
+             "angle_deg": p.angle_deg, "returns": p.returns, "is_express": p.is_express,
+             "uncertain": p.uncertain}
             for p in pieces
         ],
     }

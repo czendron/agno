@@ -78,11 +78,37 @@ jobs are now asserted normally in verify_known_jobs.py, no more workaround.
 Angle length-padding (5/10/15deg=+0, 30deg=+50mm, 45deg=+100mm) is applied
 by hand to the length before it's typed into the sheet, per Caio - so it's
 not re-applied here; length_mm is assumed to already include it if relevant.
+
+RESOLVED 2026-09-02 (Express range): confirmed by Caio - Express orders
+(Heka Hoods' standard/stock range, as opposed to a custom job) always get
+1 hood per box, full stop, regardless of depth/returns/shape/anything
+else that would otherwise allow pairing. The Express range is a
+constrained catalog: depth is always one of 300/450/600mm, length is
+always 1200 or 2400mm, and colour is always Surfmist Matt, Monument Matt,
+or Black Matt (colour isn't modeled here - it doesn't affect box/pallet
+dimensions - but is noted in case a future rule needs it). A piece marked
+is_express with a depth or length outside that catalog gets flagged
+UNCERTAIN rather than trusted silently, same as any other reading that
+looks off.
+
+This retroactively changes XP0096 (job_id literally means "eXPress",
+EXAMPLE_CLIENTS labels it "Express by Heka Hoods", both its pieces are
+450mm/1200mm - squarely in the Express catalog): it was previously
+confirmed and asserted as one paired box ("1 & 2"), from before this
+rule was known. Marked is_express=True and re-confirmed as two solo
+boxes ("1", "2") in known_jobs.py/verify_known_jobs.py to match - see
+the comment there. Flagged for Caio to double check against what
+actually shipped, since this reverses a previously-confirmed result
+rather than just adding a new one.
 """
 
 from dataclasses import dataclass, field
 from typing import List, Optional
 import math
+
+EXPRESS_DEPTHS_MM = {300, 450, 600}
+EXPRESS_LENGTHS_MM = {1200, 2400}
+EXPRESS_COLOURS = {"Surfmist Matt", "Monument Matt", "Black Matt"}  # not modeled on Piece - see module docstring
 
 
 def round_up_10(x: float) -> float:
@@ -101,6 +127,7 @@ class Piece:
     tapered: bool = False          # non-constant depth / non-standard shape
     angle_deg: float = 0           # 0 = flat; otherwise 5/10/15/30/45
     returns: int = 0               # 0, 1, or 2 (full surround)
+    is_express: bool = False       # Express range (stock, not custom) - always 1/box, see module docstring
     uncertain: Optional[str] = None  # set if a flag above is a guess, not a fact
 
     def solo_reasons(self) -> List[str]:
@@ -113,6 +140,12 @@ class Piece:
             reasons.append("tapered / non-standard shape")
         if self.angle_deg > 0:
             reasons.append(f"angled ({self.angle_deg:.0f}°)")
+        if self.is_express:
+            reasons.append("Express order - always 1 hood per box")
+            if self.depth_mm not in EXPRESS_DEPTHS_MM:
+                reasons.append(f"UNCERTAIN: Express depth {self.depth_mm:.0f}mm isn't one of the standard 300/450/600mm sizes")
+            if self.length_mm not in EXPRESS_LENGTHS_MM:
+                reasons.append(f"UNCERTAIN: Express length {self.length_mm:.0f}mm isn't one of the standard 1200/2400mm sizes")
         if self.uncertain:
             reasons.append(f"UNCERTAIN: {self.uncertain}")
         return reasons

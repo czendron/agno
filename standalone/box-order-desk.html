@@ -363,13 +363,16 @@
       <p><strong>Tapered</strong> &mdash; non-constant depth / non-standard shape.</p>
       <p><strong>Angled corner</strong> &mdash; mitred at an angle (5/10/15/30/45&deg;) rather than a square weld.</p>
       <p>Any of these forces that piece into its own box on dispatch &mdash; same as a depth over 600mm.</p>
+      <p>The separate <strong>Express</strong> checkbox is a different thing: it marks a piece as part of the
+        Express range (Heka Hoods&rsquo; stock catalog &mdash; depth 300/450/600mm, length 1200 or 2400mm) rather
+        than a custom job. Express pieces always go 1 per box regardless of Hood type.</p>
     </div>
 
     <div class="table-wrap">
       <table class="pieces-table">
         <thead>
           <tr>
-            <th>Hood ID</th><th>Depth (mm)</th><th>Length (mm)</th><th>Hood type</th><th>Angle (&deg;)</th><th></th>
+            <th>Hood ID</th><th>Depth (mm)</th><th>Length (mm)</th><th>Hood type</th><th>Angle (&deg;)</th><th>Express</th><th></th>
           </tr>
         </thead>
         <tbody id="piecesBody"></tbody>
@@ -466,12 +469,29 @@ const TEMPLATE_B64 = "UEsDBBQABgAIAAAAIQD7O3DoKAIAAO4MAAATAAgCW0NvbnRlbnRfVHlwZX
 
   function roundUp10(x) { return Math.ceil(x / 10) * 10; }
 
+  // Express range (stock, not custom) always gets 1 hood per box, no
+  // matter what else is true about it - confirmed by Caio 2026-09-02.
+  // Its catalog is fixed: depth 300/450/600mm, length 1200/2400mm
+  // (colour is Surfmist/Monument/Black Matt - not modeled here, doesn't
+  // affect box/pallet dimensions).
+  const EXPRESS_DEPTHS_MM = new Set([300, 450, 600]);
+  const EXPRESS_LENGTHS_MM = new Set([1200, 2400]);
+
   function soloReasons(p) {
     const reasons = [];
     if (p.depthMm > 600) reasons.push(`depth ${p.depthMm.toFixed(0)}mm > 600mm`);
     if (p.returns > 0) reasons.push(`has return (x${p.returns})`);
     if (p.tapered) reasons.push("tapered / non-standard shape");
     if (p.angleDeg > 0) reasons.push(`angled (${p.angleDeg.toFixed(0)}°)`);
+    if (p.isExpress) {
+      reasons.push("Express order - always 1 hood per box");
+      if (!EXPRESS_DEPTHS_MM.has(p.depthMm)) {
+        reasons.push(`UNCERTAIN: Express depth ${p.depthMm.toFixed(0)}mm isn't one of the standard 300/450/600mm sizes`);
+      }
+      if (!EXPRESS_LENGTHS_MM.has(p.lengthMm)) {
+        reasons.push(`UNCERTAIN: Express length ${p.lengthMm.toFixed(0)}mm isn't one of the standard 1200/2400mm sizes`);
+      }
+    }
     return reasons;
   }
 
@@ -613,6 +633,7 @@ const TEMPLATE_B64 = "UEsDBBQABgAIAAAAIQD7O3DoKAIAAO4MAAATAAgCW0NvbnRlbnRfVHlwZX
       lengthMm: "",
       hoodType: "straight",
       angleDeg: 15,
+      isExpress: false,
     }, seed || {});
   }
 
@@ -631,7 +652,7 @@ const TEMPLATE_B64 = "UEsDBBQABgAIAAAAIQD7O3DoKAIAAO4MAAATAAgCW0NvbnRlbnRfVHlwZX
         client: document.getElementById("client").value,
         hSections: document.getElementById("hSections").value,
         joiners: document.getElementById("joiners").value,
-        rows: pieceRows.map(r => ({ id: r.id, depthMm: r.depthMm, lengthMm: r.lengthMm, hoodType: r.hoodType, angleDeg: r.angleDeg })),
+        rows: pieceRows.map(r => ({ id: r.id, depthMm: r.depthMm, lengthMm: r.lengthMm, hoodType: r.hoodType, angleDeg: r.angleDeg, isExpress: r.isExpress })),
       }));
     } catch (e) {}
   }
@@ -645,6 +666,7 @@ const TEMPLATE_B64 = "UEsDBBQABgAIAAAAIQD7O3DoKAIAAO4MAAATAAgCW0NvbnRlbnRfVHlwZX
       returns: t.returns,
       tapered: t.tapered,
       angleDeg: t.angled ? (Number(r.angleDeg) || 0) : 0,
+      isExpress: !!r.isExpress,
     };
   }
 
@@ -696,6 +718,15 @@ const TEMPLATE_B64 = "UEsDBBQABgAIAAAAIQD7O3DoKAIAAO4MAAATAAgCW0NvbnRlbnRfVHlwZX
     angleInput.addEventListener("input", e => { r.angleDeg = e.target.value; recompute(); });
     angleTd.appendChild(angleInput);
 
+    const expressTd = document.createElement("td");
+    expressTd.style.textAlign = "center";
+    const expressInput = document.createElement("input");
+    expressInput.type = "checkbox";
+    expressInput.title = "Express range (stock, not custom) - always 1 hood per box";
+    expressInput.checked = !!r.isExpress;
+    expressInput.addEventListener("change", e => { r.isExpress = e.target.checked; recompute(); });
+    expressTd.appendChild(expressInput);
+
     const removeTd = document.createElement("td");
     const removeBtn = document.createElement("button");
     removeBtn.className = "row-remove";
@@ -709,7 +740,7 @@ const TEMPLATE_B64 = "UEsDBBQABgAIAAAAIQD7O3DoKAIAAO4MAAATAAgCW0NvbnRlbnRfVHlwZX
     });
     removeTd.appendChild(removeBtn);
 
-    tr.append(idTd, depthTd, lengthTd, typeTd, angleTd, removeTd);
+    tr.append(idTd, depthTd, lengthTd, typeTd, angleTd, expressTd, removeTd);
     return tr;
   }
 

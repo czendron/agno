@@ -32,7 +32,7 @@ from box_order.write_to_template import write_job
 
 st.set_page_config(page_title="Heka Hoods - Box Order", page_icon="📦", layout="wide")
 
-PIECE_COLUMNS = ["id", "depth_mm", "length_mm", "orientation", "tapered", "angle_deg", "returns", "uncertain"]
+PIECE_COLUMNS = ["id", "depth_mm", "length_mm", "orientation", "tapered", "angle_deg", "returns", "is_express", "uncertain"]
 
 EXAMPLE_CLIENTS = {
     "XP0096": "Express by Heka Hoods",
@@ -47,7 +47,7 @@ EXAMPLE_CLIENTS = {
 }
 
 EMPTY_ROW = {"id": "", "depth_mm": 450, "length_mm": 1200, "orientation": "regular",
-             "tapered": False, "angle_deg": 0, "returns": 0, "uncertain": ""}
+             "tapered": False, "angle_deg": 0, "returns": 0, "is_express": False, "uncertain": ""}
 
 LOGO_PATH = Path(__file__).parent / "assets" / "heka-hoods-logo.png"
 BRAND_GRAY = "#838287"
@@ -113,7 +113,7 @@ def _job_to_df(pieces) -> pd.DataFrame:
     return pd.DataFrame([
         {"id": p.label, "depth_mm": p.depth_mm, "length_mm": p.length_mm,
          "orientation": p.orientation, "tapered": p.tapered,
-         "angle_deg": p.angle_deg, "returns": p.returns,
+         "angle_deg": p.angle_deg, "returns": p.returns, "is_express": p.is_express,
          "uncertain": p.uncertain or ""}
         for p in pieces
     ], columns=PIECE_COLUMNS)
@@ -172,6 +172,7 @@ def _analyze_job_card():
             {"id": p.id, "depth_mm": p.depth_mm, "length_mm": p.length_mm,
              "orientation": p.orientation, "tapered": p.tapered,
              "angle_deg": p.angle_deg, "returns": p.returns,
+             "is_express": False,  # the AI reader doesn't try to detect this - tick it by hand, same as any other review step
              "uncertain": p.uncertain or ""}
             for p in extracted.pieces
         ], columns=PIECE_COLUMNS))
@@ -258,6 +259,7 @@ with left:
             "tapered": st.column_config.CheckboxColumn("Tapered"),
             "angle_deg": st.column_config.NumberColumn("Angle (°)", min_value=0, max_value=45),
             "returns": st.column_config.NumberColumn("Returns", min_value=0, max_value=2),
+            "is_express": st.column_config.CheckboxColumn("Express", help="Express range (stock, not custom) - always 1 hood per box"),
             "uncertain": st.column_config.TextColumn("Uncertain? (why, or blank)"),
         },
     )
@@ -279,6 +281,7 @@ with left:
             tapered=bool(r["tapered"]),
             angle_deg=float(r["angle_deg"] or 0),
             returns=int(r["returns"] or 0),
+            is_express=bool(r["is_express"]) if pd.notna(r["is_express"]) else False,  # NaN for a saved job from before this field existed
             uncertain=(str(r["uncertain"]).strip() or None) if r["uncertain"] else None,
         )
         for r in rows

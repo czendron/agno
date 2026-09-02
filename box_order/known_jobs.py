@@ -24,10 +24,17 @@ from box_order.box_grouping import Piece
 
 JOBS = {}
 
-# --- XP0096 - Express by Heka Hoods (confirmed via the live spreadsheet) ---
+# --- XP0096 - Express by Heka Hoods ---
+# Depth/length (450/1200) were confirmed via the live spreadsheet before
+# the Express-specific "always 1 hood per box" rule was known (Caio,
+# 2026-09-02) - marked is_express=True now that this job is recognized as
+# Express (both the job_id and EXAMPLE_CLIENTS' "Express by Heka Hoods"
+# label say so, and 450/1200 sit squarely in the Express catalog). This
+# flips the previously-confirmed box order from one paired box to two
+# solo boxes - see verify_known_jobs.py and the box_grouping.py docstring.
 JOBS["XP0096"] = [
-    Piece("XP0096", "1", 450, 1200),
-    Piece("XP0096", "2", 450, 1200),
+    Piece("XP0096", "1", 450, 1200, is_express=True),
+    Piece("XP0096", "2", 450, 1200, is_express=True),
 ]
 
 # --- HH23173N - Provision Projects (confirmed by Caio) ---

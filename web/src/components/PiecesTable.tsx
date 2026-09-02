@@ -37,6 +37,7 @@ export function PiecesTable({ pieces, onChange }: PiecesTableProps) {
               <th className="px-2 py-2 text-center font-medium">Tapered</th>
               <th className="px-2 py-2 font-medium">Angle (°)</th>
               <th className="px-2 py-2 font-medium">Returns</th>
+              <th className="px-2 py-2 text-center font-medium">Express</th>
               <th className="px-2 py-2 font-medium">Uncertain? (why, or blank)</th>
               <th className="px-2 py-2" />
             </tr>
@@ -108,6 +109,14 @@ export function PiecesTable({ pieces, onChange }: PiecesTableProps) {
                     className={inputClass}
                     value={p.returns}
                     onChange={(e) => update(i, { returns: Number(e.target.value) || 0 })}
+                  />
+                </td>
+                <td className="px-2 py-1.5 text-center" title="Express range (stock, not custom) - always 1 hood per box">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 accent-brand-black"
+                    checked={p.is_express}
+                    onChange={(e) => update(i, { is_express: e.target.checked })}
                   />
                 </td>
                 <td className="px-2 py-1.5">

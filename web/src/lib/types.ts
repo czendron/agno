@@ -6,6 +6,7 @@ export interface Piece {
   tapered: boolean;
   angle_deg: number;
   returns: number;
+  is_express: boolean;
   uncertain: string | null;
 }
 
@@ -72,6 +73,7 @@ export const EMPTY_PIECE: Piece = {
   tapered: false,
   angle_deg: 0,
   returns: 0,
+  is_express: false,
   uncertain: null,
 };
 

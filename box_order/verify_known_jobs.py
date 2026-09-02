@@ -13,7 +13,13 @@ from box_order.box_grouping import group_into_boxes, report
 from box_order.known_jobs import JOBS
 
 CONFIRMED = {
-    "XP0096": ["1 & 2"],
+    # Was ["1 & 2"] (one paired box) until 2026-09-02 - Caio confirmed
+    # Express orders always get 1 hood per box, and XP0096 is Express
+    # (job_id + EXAMPLE_CLIENTS both say so, 450/1200 fits the Express
+    # catalog). Flagged for Caio to double check against what actually
+    # shipped, since this reverses a previously-confirmed result rather
+    # than adding a new one - see box_grouping.py's module docstring.
+    "XP0096": ["1", "2"],
     "HH23173N": ["1 & 2"],
     "HH23341N": ["2 & 1"],
     # Odd 3-piece pool at depth=600 (1, 2A, 2B): the longest (2B) goes
