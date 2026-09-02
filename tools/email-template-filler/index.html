@@ -513,11 +513,16 @@
   function parseAddresses(raw) {
     const text = (raw || '').trim();
     if (!text) return { site: '', delivery: '' };
-    const buckets = { site: [], delivery: [] };
+    const buckets = { site: [], delivery: [], ignore: [] };
     let current = 'site';
     for (const rawLine of text.split('\n')) {
       const line = rawLine.trim();
       if (!line) continue;
+      const projectLabel = line.match(/^project\s*name\s*:?\s*(.*)$/i);
+      if (projectLabel) {
+        current = 'ignore';
+        continue;
+      }
       const siteLabel = line.match(/^site\s*address\s*:?\s*(.*)$/i);
       if (siteLabel) {
         current = 'site';
@@ -539,7 +544,9 @@
 
   function parseSuburbStatePostcode(addressLine) {
     if (!addressLine) return '';
-    const m = addressLine.match(/([A-Za-z' .-]+?)\s+(NSW|VIC|QLD|WA|SA|TAS|ACT|NT)\s+(\d{4})/i);
+    // Separator allows a comma, whitespace, or both, so "Suburb, VIC 3195"
+    // and "Suburb VIC 3195" both resolve the same way.
+    const m = addressLine.match(/([A-Za-z' .-]+?)[,\s]+(NSW|VIC|QLD|WA|SA|TAS|ACT|NT)[,\s]+(\d{4})/i);
     if (!m) return '';
     let suburb = m[1].trim();
     if (suburb.includes(',')) suburb = suburb.split(',').pop().trim();
@@ -551,7 +558,18 @@
     if (!text) return null;
     const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
     if (!lines.length) return null;
-    return { name: lines[0], phone: lines[1] || '' };
+    // Skip role/title lines (e.g. "(Estimator)") between the name and the
+    // phone — a phone line is whichever one actually has digits in it.
+    const isPhoneLine = l => (l.match(/\d/g) || []).length >= 6;
+    const phone = lines.slice(1).find(isPhoneLine) || '';
+    return { name: lines[0], phone };
+  }
+
+  function firstListed(raw, separatorRe) {
+    const text = (raw || '').trim();
+    if (!text) return { first: '', hasMore: false };
+    const parts = text.split(separatorRe).map(s => s.trim()).filter(Boolean);
+    return { first: parts[0] || '', hasMore: parts.length > 1 };
   }
 
   function parseDDMMYY(str) {
@@ -600,12 +618,13 @@
     const completionDate = get(5);
     const addressRaw = fields[9] || '';
     const contactRaw = fields[10] || '';
-    const email = get(11);
+    const emailRaw = fields[11] || '';
     const weekOfRaw = get(12);
 
     const { site, delivery } = parseAddresses(addressRaw);
     const suburbStatePostcode = parseSuburbStatePostcode(delivery);
     const contact = parseContact(contactRaw);
+    const { first: email, hasMore: hasMoreEmails } = firstListed(emailRaw, /[\n,;]+/);
     const weekLabel = weekOfRaw ? weekRangeLabel(weekOfRaw) : '';
 
     const warnings = [];
@@ -615,6 +634,7 @@
     else if (!contact.phone) warnings.push('Contact found with no phone number');
     if (site && !suburbStatePostcode) warnings.push('Could not detect suburb/state/postcode');
     if (!email) warnings.push('No recipient email found');
+    if (hasMoreEmails) warnings.push('Multiple emails listed — used the first; check if others should be cc’d');
 
     const firstName = contact && contact.name ? contact.name.split(/\s+/)[0] : '[first name]';
     const contactLine = contact && contact.name
