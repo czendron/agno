@@ -272,29 +272,68 @@
     border-radius: 4px;
     background: var(--surface-2);
     padding: 1rem 1.1rem 1.1rem;
+  }
+  .ticket.has-warning { border-left-color: var(--warn); }
+  .ticket.is-sent { border-left-color: var(--line); opacity: 0.6; }
+  .ticket.is-sent:hover, .ticket.is-sent:focus-within { opacity: 0.9; }
+
+  .ticket-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    cursor: pointer;
+    user-select: none;
+  }
+  /* display:flex drops the browser's own disclosure triangle, so draw one
+     that rotates with [open] instead — the click-to-expand affordance the
+     summary line needs, especially once a sent card is collapsed down to it. */
+  .ticket-summary::-webkit-details-marker { display: none; }
+  .ticket-summary::before {
+    content: '';
+    flex: none;
+    width: 0.55rem;
+    height: 0.55rem;
+    border-right: 2px solid var(--ink-faint);
+    border-bottom: 2px solid var(--ink-faint);
+    transform: rotate(-45deg);
+    transition: transform 150ms ease;
+  }
+  .ticket[open] > .ticket-summary::before { transform: rotate(45deg); }
+  .ticket-summary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 3px;
+  }
+  /* Only the summary line's own hover/press should react, not the whole card. */
+  .ticket-summary:hover .job { color: var(--accent); }
+
+  .ticket-body {
     display: flex;
     flex-direction: column;
     gap: 0.7rem;
-  }
-  .ticket.has-warning { border-left-color: var(--warn); }
-  .ticket.is-sent { border-left-color: var(--line); opacity: 0.55; }
-  .ticket.is-sent:hover, .ticket.is-sent:focus-within { opacity: 0.85; }
-
-  .ticket-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 1rem;
-    flex-wrap: wrap;
+    margin-top: 0.85rem;
   }
 
-  .ticket-id { display: flex; flex-direction: column; gap: 0.15rem; }
+  .ticket-id { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
   .ticket-id .job {
     font-family: var(--font-mono);
     font-weight: 600;
     font-size: 0.95rem;
   }
   .ticket-id .colour { color: var(--ink-soft); font-size: 0.82rem; }
+
+  .summary-email {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    color: var(--ink-faint);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
 
   .status {
     display: inline-flex;
@@ -308,8 +347,10 @@
     border-radius: 3px;
     background: var(--good-bg);
     color: var(--good);
+    flex: none;
   }
   .ticket.has-warning .status { background: var(--warn-bg); color: var(--warn); }
+  .ticket.is-sent .status { background: var(--surface); color: var(--ink-faint); }
   .status .dot {
     width: 6px; height: 6px; border-radius: 50%;
     background: currentColor;
@@ -737,7 +778,7 @@
   }
 
   function renderCard(data) {
-    const wrap = document.createElement('article');
+    const wrap = document.createElement('details');
     wrap.className = 'ticket' + (data.warnings.length ? ' has-warning' : '');
 
     const chips = data.warnings.map(w => `<li class="chip">${escapeHtml(w)}</li>`).join('');
@@ -751,29 +792,32 @@
     ].map(([k, v]) => `<div class="debug-row"><span>${escapeHtml(k)}</span><span>${escapeHtml(v || '—')}</span></div>`).join('');
 
     wrap.innerHTML = `
-      <header class="ticket-head">
+      <summary class="ticket-summary">
         <div class="ticket-id">
           <span class="job mono">${escapeHtml(data.primary || 'Row ' + (data.idx + 1))}</span>
           <span class="colour">${escapeHtml(data.colour)}</span>
         </div>
+        <span class="summary-email">${escapeHtml(data.email || 'no email found')}</span>
         <span class="status"><span class="dot"></span>${data.warnings.length ? 'Needs review' : 'Ready'}</span>
-      </header>
-      <div class="ticket-to">
-        <span class="to-label">To</span>
-        <span class="to-email">${escapeHtml(data.email || 'no email found')}</span>
-        <button type="button" class="btn ghost small copy-email">Copy address</button>
+      </summary>
+      <div class="ticket-body">
+        <div class="ticket-to">
+          <span class="to-label">To</span>
+          <span class="to-email">${escapeHtml(data.email || 'no email found')}</span>
+          <button type="button" class="btn ghost small copy-email">Copy address</button>
+        </div>
+        ${chips ? `<ul class="chips">${chips}</ul>` : ''}
+        <textarea class="body" spellcheck="false" rows="11" aria-label="Email body"></textarea>
+        <footer class="ticket-actions">
+          <button type="button" class="btn primary small copy-body" title="Copies with 1st/2nd/3rd/4th raised, for pasting into Gmail, Outlook or Word">Copy email</button>
+          <a class="btn ghost small mailto-link" href="#">Open in mail app</a>
+          <button type="button" class="btn ghost small mark-sent">Mark as sent</button>
+          <details class="debug">
+            <summary>Parsed data</summary>
+            <div class="debug-grid">${debugRows}</div>
+          </details>
+        </footer>
       </div>
-      ${chips ? `<ul class="chips">${chips}</ul>` : ''}
-      <textarea class="body" spellcheck="false" rows="11" aria-label="Email body"></textarea>
-      <footer class="ticket-actions">
-        <button type="button" class="btn primary small copy-body" title="Copies with 1st/2nd/3rd/4th raised, for pasting into Gmail, Outlook or Word">Copy email</button>
-        <a class="btn ghost small mailto-link" href="#">Open in mail app</a>
-        <button type="button" class="btn ghost small mark-sent">Mark as sent</button>
-        <details class="debug">
-          <summary>Parsed data</summary>
-          <div class="debug-grid">${debugRows}</div>
-        </details>
-      </footer>
     `;
 
     const bodyEl = wrap.querySelector('.body');
@@ -793,6 +837,7 @@
       wrap.classList.toggle('is-sent', isSent);
       markBtn.classList.toggle('is-active', isSent);
       markBtn.textContent = isSent ? '✓ Sent' : 'Mark as sent';
+      wrap.open = !isSent;
     };
     applySentState(sentOrders.has(sentKey));
     markBtn.addEventListener('click', () => {
