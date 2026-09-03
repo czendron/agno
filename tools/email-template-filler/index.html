@@ -287,8 +287,8 @@
     user-select: none;
   }
   /* display:flex drops the browser's own disclosure triangle, so draw one
-     that rotates with [open] instead — the click-to-expand affordance the
-     summary line needs, especially once a sent card is collapsed down to it. */
+     that rotates with [open] instead. It's the click-to-expand affordance
+     the summary line needs, especially once a sent card is collapsed down to it. */
   .ticket-summary::-webkit-details-marker { display: none; }
   .ticket-summary::before {
     content: '';
@@ -424,7 +424,7 @@
   <header class="masthead">
     <p class="eyebrow">Heka Hoods · Dispatch Desk</p>
     <h1>Powder-coat dispatch emails, from a pasted row</h1>
-    <p class="lede">Paste one or more Smartsheet rows below. Each one turns into a ready-to-send dispatch email — check it over, then copy.</p>
+    <p class="lede">Paste one or more Smartsheet rows below. Each one turns into a ready-to-send dispatch email: check it over, then copy.</p>
   </header>
 
   <section class="panel intake">
@@ -449,7 +449,7 @@
         <li>estimated dispatch date – week of</li>
         <li>state</li>
       </ol>
-      <p>Copy straight out of Smartsheet — tabs between columns and quoted multi-line cells (addresses, contacts) are handled automatically. Blank trailing columns are fine.</p>
+      <p>Copy straight out of Smartsheet: tabs between columns and quoted multi-line cells (addresses, contacts) are handled automatically. Blank trailing columns are fine.</p>
       <p>One row per order. Paste as many as you like in one go.</p>
     </div>
     <textarea id="input" placeholder="Paste one or more Smartsheet rows here…" spellcheck="false"></textarea>
@@ -479,7 +479,7 @@
     <div class="panel-head">
       <h2>2 · Review &amp; send</h2>
     </div>
-    <p class="empty" id="emptyState">Nothing generated yet — paste rows above and hit Generate.</p>
+    <p class="empty" id="emptyState">Nothing generated yet. Paste rows above and hit Generate.</p>
     <div class="results" id="results"></div>
   </section>
 </div>
@@ -693,10 +693,10 @@
     const warnings = [];
     if (!site) warnings.push('No site address found');
     if (weekOfRaw && !weekLabel) warnings.push('Could not read the dispatch date (expected DD/MM/YY)');
-    if (!contact) warnings.push('No site contact — used the "missing contact" wording');
+    if (!contact) warnings.push('No site contact (used the "missing contact" wording)');
     else if (!contact.phone) warnings.push('Contact found with no phone number');
     if (!email) warnings.push('No recipient email found');
-    if (hasMoreEmails) warnings.push('Multiple emails listed — used the first; check if others should be cc’d');
+    if (hasMoreEmails) warnings.push('Multiple emails listed (used the first; check if others should be cc’d)');
 
     const firstName = contact && contact.name ? contact.name.split(/\s+/)[0] : '[first name]';
     const contactLine = contact && contact.name
@@ -786,10 +786,10 @@
       ['Site address', data.debug.site],
       ['Delivery address', data.debug.delivery],
       ['Dispatch week', data.debug.weekLabel],
-      ['Site contact', data.debug.contact ? `${data.debug.contact.name} — ${data.debug.contact.phone || 'no phone found'}` : 'none found'],
+      ['Site contact', data.debug.contact ? `${data.debug.contact.name}, ${data.debug.contact.phone || 'no phone found'}` : 'none found'],
       ['PC drop date', data.debug.dropDate],
       ['PC completion date', data.debug.completionDate]
-    ].map(([k, v]) => `<div class="debug-row"><span>${escapeHtml(k)}</span><span>${escapeHtml(v || '—')}</span></div>`).join('');
+    ].map(([k, v]) => `<div class="debug-row"><span>${escapeHtml(k)}</span><span>${escapeHtml(v || 'n/a')}</span></div>`).join('');
 
     wrap.innerHTML = `
       <summary class="ticket-summary">
@@ -825,7 +825,7 @@
     wrap.querySelector('.copy-body').addEventListener('click', e => copyRichText(bodyEl.value, e.currentTarget));
     wrap.querySelector('.copy-email').addEventListener('click', e => copyText(data.email, e.currentTarget));
 
-    const subject = `${data.primary || 'Order update'} — Powder Coating Update`;
+    const subject = `${data.primary || 'Order update'}: Powder Coating Update`;
     const mailtoLink = wrap.querySelector('.mailto-link');
     mailtoLink.addEventListener('click', () => {
       mailtoLink.href = `mailto:${encodeURIComponent(data.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyEl.value)}`;
