@@ -554,16 +554,31 @@
     return `${suburb} ${m[2].toUpperCase()} ${m[3]}`;
   }
 
+  // Matches one AU phone number: optional "(0X)" area code, then digits/
+  // spaces/hyphens. Used with a plain (non-global) match so it always finds
+  // the FIRST phone number in a string, ignoring a second one after a "/".
+  const PHONE_RE = /\(?0\d\)?[\d \-]{5,}\d/;
+
   function parseContact(raw) {
     const text = (raw || '').replace(/^\s*site\s*contact\s*:?/i, '').trim();
     if (!text) return null;
     const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
     if (!lines.length) return null;
-    // Skip role/title lines (e.g. "(Estimator)") between the name and the
-    // phone — a phone line is whichever one actually has digits in it.
-    const isPhoneLine = l => (l.match(/\d/g) || []).length >= 6;
-    const phone = lines.slice(1).find(isPhoneLine) || '';
-    return { name: lines[0], phone };
+    const stripRole = l => l.replace(/\([^)]*\)/g, '').trim();
+
+    // Name and phone are sometimes on the same line ("Thomas Bayly 0400 208
+    // 252", "Chris Williams (Managing Director) 07 3349 7946 / 0413 431
+    // 691"), sometimes on separate lines with a role line in between. Scan
+    // for whichever line has the phone number first; the name is always
+    // line 1, with any "(Role)" and the phone itself stripped out.
+    for (let i = 0; i < lines.length; i++) {
+      const m = lines[i].match(PHONE_RE);
+      if (m) {
+        const name = i === 0 ? stripRole(lines[i].slice(0, m.index)) : stripRole(lines[0]);
+        return { name, phone: m[0].trim() };
+      }
+    }
+    return { name: stripRole(lines[0]), phone: '' };
   }
 
   function firstListed(raw, separatorRe) {
