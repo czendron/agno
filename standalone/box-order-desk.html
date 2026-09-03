@@ -345,10 +345,15 @@
       <label>Joiners
         <input id="joiners" type="number" min="0" placeholder="off the job card's page details" autocomplete="off">
       </label>
+      <label>Number of hoods
+        <input id="hoodCount" type="number" min="0" placeholder="type a count to open that many rows" autocomplete="off">
+      </label>
     </div>
     <p class="settings-hint">H Sections and Joiners aren&rsquo;t computed &mdash; read them straight off the job
       card&rsquo;s own &ldquo;Page details&rdquo; table. &ldquo;Hoods&rdquo; on the DWO is filled in
-      automatically as your piece count below.</p>
+      automatically as your piece count below. &ldquo;Number of hoods&rdquo; is just a shortcut: type a count
+      and that many empty rows open below at once, instead of clicking &ldquo;+ Add piece&rdquo; one at a time
+      &mdash; it only adds rows, never removes ones you&rsquo;ve already filled in.</p>
   </section>
 
   <section class="panel">
@@ -849,6 +854,18 @@ const TEMPLATE_B64 = "UEsDBBQABgAIAAAAIQD7O3DoKAIAAO4MAAATAAgCW0NvbnRlbnRfVHlwZX
   document.getElementById("hSections").addEventListener("input", saveState);
   document.getElementById("joiners").addEventListener("input", saveState);
   document.getElementById("client").addEventListener("input", saveState);
+
+  // "Number of hoods" is a one-shot shortcut, not a bound value: typing a
+  // count tops the Pieces table up to at least that many rows. It only
+  // ever adds rows, never removes any - so it's safe to bump the number
+  // even after you've started filling rows in.
+  const HOOD_COUNT_MAX = 300;
+  document.getElementById("hoodCount").addEventListener("change", e => {
+    const target = Math.min(Math.max(0, Math.floor(Number(e.target.value) || 0)), HOOD_COUNT_MAX);
+    while (pieceRows.length < target) pieceRows.push(newRow());
+    renderPieceRows();
+    recompute();
+  });
 
   // ---------------------------------------------------------------------
   // DWO generation - fills a copy of the real Dispatch Works Order
