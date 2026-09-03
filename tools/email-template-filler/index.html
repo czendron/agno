@@ -218,6 +218,7 @@
   .btn.ghost:hover { border-color: var(--accent); color: var(--accent); }
   .btn.small { padding: 0.35rem 0.7rem; font-size: 0.8rem; }
   .btn.copied { background: var(--good); border-color: var(--good); color: var(--accent-ink); }
+  .btn.mark-sent.is-active { background: var(--good); border-color: var(--good); color: var(--accent-ink); }
 
   button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus-visible {
     outline: 2px solid var(--accent);
@@ -276,6 +277,8 @@
     gap: 0.7rem;
   }
   .ticket.has-warning { border-left-color: var(--warn); }
+  .ticket.is-sent { border-left-color: var(--line); opacity: 0.55; }
+  .ticket.is-sent:hover, .ticket.is-sent:focus-within { opacity: 0.85; }
 
   .ticket-head {
     display: flex;
@@ -443,6 +446,7 @@
 <script>
   const SETTINGS_KEY = 'hh-dispatch-desk:settings';
   const INPUT_KEY = 'hh-dispatch-desk:lastInput';
+  const SENT_KEY = 'hh-dispatch-desk:sent';
   const DEFAULT_SETTINGS = {
     officePhone: '07 5406 0886',
     senderEmail: 'projects@hekahoods.com.au',
@@ -466,6 +470,20 @@
   }
   function loadLastInput() {
     try { return localStorage.getItem(INPUT_KEY) || ''; } catch (e) { return ''; }
+  }
+
+  function loadSent() {
+    try { return new Set(JSON.parse(localStorage.getItem(SENT_KEY) || '[]')); } catch (e) { return new Set(); }
+  }
+  function saveSent(set) {
+    try { localStorage.setItem(SENT_KEY, JSON.stringify([...set])); } catch (e) {}
+  }
+  const sentOrders = loadSent();
+  // Order code is the natural stable key across regenerates/reloads; rows
+  // without one (parsing failed badly enough there's no primary) fall back
+  // to a position+email key so the toggle still works within this session.
+  function sentKeyFor(data) {
+    return data.primary || `row-${data.idx}-${data.email}`;
   }
 
   function escapeHtml(str) {
@@ -541,17 +559,6 @@
     const site = extractAddressLine(buckets.site);
     const delivery = buckets.delivery.length ? extractAddressLine(buckets.delivery) : site;
     return { site, delivery };
-  }
-
-  function parseSuburbStatePostcode(addressLine) {
-    if (!addressLine) return '';
-    // Separator allows a comma, whitespace, or both, so "Suburb, VIC 3195"
-    // and "Suburb VIC 3195" both resolve the same way.
-    const m = addressLine.match(/([A-Za-z' .-]+?)[,\s]+(NSW|VIC|QLD|WA|SA|TAS|ACT|NT)[,\s]+(\d{4})/i);
-    if (!m) return '';
-    let suburb = m[1].trim();
-    if (suburb.includes(',')) suburb = suburb.split(',').pop().trim();
-    return `${suburb} ${m[2].toUpperCase()} ${m[3]}`;
   }
 
   // Matches one AU phone number: optional "(0X)" area code, then digits/
@@ -638,7 +645,6 @@
     const weekOfRaw = get(12);
 
     const { site, delivery } = parseAddresses(addressRaw);
-    const suburbStatePostcode = parseSuburbStatePostcode(delivery);
     const contact = parseContact(contactRaw);
     const { first: email, hasMore: hasMoreEmails } = firstListed(emailRaw, /[\n,;]+/);
     const weekLabel = weekOfRaw ? weekRangeLabel(weekOfRaw) : '';
@@ -648,7 +654,6 @@
     if (weekOfRaw && !weekLabel) warnings.push('Could not read the dispatch date (expected DD/MM/YY)');
     if (!contact) warnings.push('No site contact — used the "missing contact" wording');
     else if (!contact.phone) warnings.push('Contact found with no phone number');
-    if (site && !suburbStatePostcode) warnings.push('Could not detect suburb/state/postcode');
     if (!email) warnings.push('No recipient email found');
     if (hasMoreEmails) warnings.push('Multiple emails listed — used the first; check if others should be cc’d');
 
@@ -663,7 +668,7 @@
       'I hope you are well.',
       `Your order for ${site || '[site address]'} has now progressed to powder coating.`,
       `The order is estimated to dispatch our workshop the week of ${weekLabel || '[date & month]'}.`,
-      `From the day of dispatch, please allow [transit days] business days for delivery to ${suburbStatePostcode || delivery || '[suburb, state & postcode]'}.`,
+      `From the day of dispatch, please allow [transit days] business days for delivery to ${delivery || '[suburb, state & postcode]'}.`,
       contactLine,
       'We will contact you once your order has undergone our internal quality assurance check and is ready for dispatch.',
       `If you have any questions, please feel free to contact the office at ${settings.officePhone} or email me directly at ${settings.senderEmail}.`
@@ -672,7 +677,7 @@
     return {
       idx, primary, colour, email, body, warnings,
       debug: {
-        site, suburbStatePostcode: suburbStatePostcode || delivery, weekLabel, contact,
+        site, delivery, weekLabel, contact,
         dropDate, completionDate
       }
     };
@@ -738,7 +743,7 @@
     const chips = data.warnings.map(w => `<li class="chip">${escapeHtml(w)}</li>`).join('');
     const debugRows = [
       ['Site address', data.debug.site],
-      ['Delivery suburb/state/postcode', data.debug.suburbStatePostcode],
+      ['Delivery address', data.debug.delivery],
       ['Dispatch week', data.debug.weekLabel],
       ['Site contact', data.debug.contact ? `${data.debug.contact.name} — ${data.debug.contact.phone || 'no phone found'}` : 'none found'],
       ['PC drop date', data.debug.dropDate],
@@ -763,6 +768,7 @@
       <footer class="ticket-actions">
         <button type="button" class="btn primary small copy-body" title="Copies with 1st/2nd/3rd/4th raised, for pasting into Gmail, Outlook or Word">Copy email</button>
         <a class="btn ghost small mailto-link" href="#">Open in mail app</a>
+        <button type="button" class="btn ghost small mark-sent">Mark as sent</button>
         <details class="debug">
           <summary>Parsed data</summary>
           <div class="debug-grid">${debugRows}</div>
@@ -781,7 +787,31 @@
       mailtoLink.href = `mailto:${encodeURIComponent(data.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyEl.value)}`;
     });
 
+    const sentKey = sentKeyFor(data);
+    const markBtn = wrap.querySelector('.mark-sent');
+    const applySentState = isSent => {
+      wrap.classList.toggle('is-sent', isSent);
+      markBtn.classList.toggle('is-active', isSent);
+      markBtn.textContent = isSent ? '✓ Sent' : 'Mark as sent';
+    };
+    applySentState(sentOrders.has(sentKey));
+    markBtn.addEventListener('click', () => {
+      const nowSent = !sentOrders.has(sentKey);
+      if (nowSent) sentOrders.add(sentKey); else sentOrders.delete(sentKey);
+      saveSent(sentOrders);
+      applySentState(nowSent);
+      updateRowCount();
+    });
+
     return wrap;
+  }
+
+  function updateRowCount() {
+    const total = document.querySelectorAll('#results .ticket').length;
+    const sent = document.querySelectorAll('#results .ticket.is-sent').length;
+    document.getElementById('rowCount').textContent = total
+      ? `${total} order${total > 1 ? 's' : ''} parsed · ${sent} sent`
+      : '';
   }
 
   function generate() {
@@ -790,17 +820,16 @@
     const rows = parseTSV(input.value).filter(isUsableRow);
     const results = document.getElementById('results');
     const empty = document.getElementById('emptyState');
-    const count = document.getElementById('rowCount');
     results.innerHTML = '';
 
     if (!rows.length) {
       empty.hidden = false;
-      count.textContent = '';
+      document.getElementById('rowCount').textContent = '';
       return;
     }
     empty.hidden = true;
-    count.textContent = `${rows.length} order${rows.length > 1 ? 's' : ''} parsed`;
     rows.forEach((fields, idx) => results.appendChild(renderCard(processRow(fields, idx))));
+    updateRowCount();
   }
 
   function clearAll() {

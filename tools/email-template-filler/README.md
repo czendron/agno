@@ -36,8 +36,9 @@ estimated dispatch date – week of, state
   Monday–Friday of that week (e.g. `21/09/26` → `September 21st – 25th`).
 - **Transit days** — left as `[transit days]` on purpose; it isn't in the sheet, so fill
   it in by hand per order.
-- **Suburb, state & postcode** — parsed from the delivery address if the address cell
-  has a separate `Delivery Address:` section, otherwise the same as the site address.
+- **Suburb, state & postcode** — the full delivery address (not just the suburb/state/
+  postcode, despite the placeholder's name) if the address cell has a separate
+  `Delivery Address:` section, otherwise the same as the site address.
 - **Site contact paragraph** — if a contact name is present, fills in the "we currently
   have X on Y" sentence; if the cell is empty, falls back to the "we're missing the
   contact's details" sentence.
