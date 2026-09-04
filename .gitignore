@@ -10,7 +10,5 @@ venv/
 # Env vars
 .env
 
-# Agno / tmp
-tmp/
-.logs/
-.cache/
+# Generated box orders
+box_order/output/
