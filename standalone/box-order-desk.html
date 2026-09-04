@@ -345,15 +345,20 @@
       <label>Joiners
         <input id="joiners" type="number" min="0" placeholder="off the job card's page details" autocomplete="off">
       </label>
-      <label>Number of hoods
-        <input id="hoodCount" type="number" min="0" placeholder="type a count to open that many rows" autocomplete="off">
-      </label>
+      <div style="display:flex; flex-direction:column; gap:0.3rem;">
+        <label for="hoodCount" style="font-size:0.8rem; color:var(--ink-soft);">Number of hoods</label>
+        <div style="display:flex; gap:0.5rem;">
+          <input id="hoodCount" type="number" min="0" placeholder="e.g. 7" style="flex:1; min-width:0;" autocomplete="off">
+          <button type="button" id="openHoodRowsBtn" class="btn ghost small" style="white-space:nowrap;">Open fields</button>
+        </div>
+      </div>
     </div>
     <p class="settings-hint">H Sections and Joiners aren&rsquo;t computed &mdash; read them straight off the job
       card&rsquo;s own &ldquo;Page details&rdquo; table. &ldquo;Hoods&rdquo; on the DWO is filled in
-      automatically as your piece count below. &ldquo;Number of hoods&rdquo; is just a shortcut: type a count
-      and that many empty rows open below at once, instead of clicking &ldquo;+ Add piece&rdquo; one at a time
-      &mdash; it only adds rows, never removes ones you&rsquo;ve already filled in.</p>
+      automatically as your piece count below. Type a count next to &ldquo;Number of hoods&rdquo; and click
+      &ldquo;Open fields&rdquo; to open that many empty rows below at once, instead of clicking
+      &ldquo;+ Add piece&rdquo; one at a time &mdash; it only adds rows, never removes ones you&rsquo;ve already
+      filled in.</p>
   </section>
 
   <section class="panel">
@@ -855,16 +860,22 @@ const TEMPLATE_B64 = "UEsDBBQABgAIAAAAIQD7O3DoKAIAAO4MAAATAAgCW0NvbnRlbnRfVHlwZX
   document.getElementById("joiners").addEventListener("input", saveState);
   document.getElementById("client").addEventListener("input", saveState);
 
-  // "Number of hoods" is a one-shot shortcut, not a bound value: typing a
-  // count tops the Pieces table up to at least that many rows. It only
-  // ever adds rows, never removes any - so it's safe to bump the number
-  // even after you've started filling rows in.
+  // "Number of hoods" + "Open fields" is a one-shot shortcut, not a bound
+  // value: clicking the button tops the Pieces table up to at least that
+  // many rows. It only ever adds rows, never removes any - so it's safe
+  // to click it again with a bigger number even after you've started
+  // filling rows in.
   const HOOD_COUNT_MAX = 300;
-  document.getElementById("hoodCount").addEventListener("change", e => {
-    const target = Math.min(Math.max(0, Math.floor(Number(e.target.value) || 0)), HOOD_COUNT_MAX);
+  function openHoodRows() {
+    const input = document.getElementById("hoodCount");
+    const target = Math.min(Math.max(0, Math.floor(Number(input.value) || 0)), HOOD_COUNT_MAX);
     while (pieceRows.length < target) pieceRows.push(newRow());
     renderPieceRows();
     recompute();
+  }
+  document.getElementById("openHoodRowsBtn").addEventListener("click", openHoodRows);
+  document.getElementById("hoodCount").addEventListener("keydown", e => {
+    if (e.key === "Enter") { e.preventDefault(); openHoodRows(); }
   });
 
   // ---------------------------------------------------------------------
